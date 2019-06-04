@@ -1,0 +1,110 @@
+---
+title: "Procesado básico"
+subtitle: "Procesamiento de imagen y señal"
+author: "Carmen Hernández Gómez"
+date: "Curso 2018-2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', out.width = '100%')
+library("knitr")
+library("shiny")
+library("tuneR")
+library("seewave")
+library("reshape2")
+library("ggplot2")
+library("gridExtra")
+library("monitoR")
+```
+
+---------------------------------------
+
+# Indicaciones previas
+
+* Para oir una señal de audio, guardaremos la variable que contiene el audio en formato "Wave" en un fichero de tipo ".wav" en la carpeta temporal denominada "www". Una vez realizado este paso, podemos escuchar este fichero mediante el objeto [**`tags$audio`**](https://shiny.rstudio.com/articles/tag-glossary.html) del paquete `shiny` como se muestra a continuación:
+
+```{r, eval=FALSE}
+# El audio almacenado en la variable (en formato Wave) lo guardamos en la carpeta temporal llamada "www" en un fichero de tipo ".wav"
+savewav(variable, filename="www/<nombre Audio>.wav")
+
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src = "www/<nombre Audio>.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+* Si el fichero de audio se encuentra en un cierto directorio, como por ejemplo el directorio "audio", podemos escuchar este fichero mediante el siguiente comando:
+```{r, eval=FALSE}
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src = "audio/<nombre Audio>.wav", type = "audio/wav", autostart="false", controls = NA)
+
+```
+
+* No obstante, debemos hacer notar que si Rstudio no ejecuta el fichero ".Rmd" en su "Viewer" interno sino en una ventana externa, es posible que no pueda oirse la señal. En ese caso, utilizar el botón "Open in Browser" que podéis encontrar en la cabecera de la página. Una vez que se abra el fichero ".html" correspondiente, podréis oir la señal de audio sin problemas.
+
+* Si se utiliza la función `writeWave()` en vez de la función `savewav()`, es posible que haya que normalizar la señal previamente mediante el comando [**`normalize()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/normalize-methods) del paquete `tuneR`.
+
+---------------------------------------
+
+
+---------------------------------------
+
+# Muestreo
+
+¿ Qué sucede cuando muestramos mal una señal ? Veamos un ejemplo.
+
+  * Leer la señal `samoyed-shambles.wav` y crear tres señales a partir de ella:
+    + `samoyed.16kHz` con una frecuencia de muestreo de 16000Hz ($fs = 16000$)
+    + `samoyed.8kHz` con una frecuencia de muestreo de 8000Hz ($fs = 8000$)
+    + `samoyed.32kHz` con una frecuencia de muestreo de 32000Hz ($fs = 32000$)
+
+---------------------------------------
+
+  * Audio original con una frecuencia de muestreo de 22050Hz:
+
+```{r}
+samoyed <- readWave("audio/samoyed-shambles.wav")
+
+samoyed@samp.rate
+
+# Oimos la señal
+tags$audio(src = "audio/samoyed-shambles.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+---------------------------------------
+
+  * Señal remuestreada con una frecuencia de muestreo de 16000Hz: 
+
+```{r}
+samoyed.16kHz <- Wave(samoyed@left, samp.rate = 16000, bit = 16)
+
+# Oimos la señal
+savewav(samoyed.16kHz, filename = "www/samoyed.16kHz.wav")
+tags$audio(src = "www/samoyed.16kHz.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+---------------------------------------
+
+  * Señal remuestreada con una frecuencia de muestreo de 8000Hz: 
+
+```{r}
+samoyed.8kHz  <- Wave(samoyed@left, samp.rate = 8000, bit = 16)
+
+# Oimos la señal
+savewav(samoyed.8kHz, filename = 'www/samoyed.8kHz.wav')
+tags$audio(src = "www/samoyed.8kHz.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+---------------------------------------
+
+  * Señal remuestreada con una frecuencia de muestreo de 32000Hz: 
+
+```{r}
+samoyed.32kHz <- Wave(samoyed@left, samp.rate = 32000, bit = 16)
+
+# Oimos la señal
+savewav(samoyed.32kHz, filename = 'www/samoyed.32kHz.wav')
+tags$audio(src = "www/samoyed.32kHz.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+

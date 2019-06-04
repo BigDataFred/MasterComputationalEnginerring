@@ -1,0 +1,357 @@
+---
+title: "Tareas a realizar. Parte I"
+subtitle: "Procesamiento de imagen y señal"
+author: "FREDERIC ROUX"
+date: "Curso 2018-2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', out.width = '60%')
+library("shiny")
+library("tuneR")
+library("seewave")
+library("reshape2")
+library("ggplot2")
+library("kableExtra")
+```
+
+---------------------------------------
+
+# Indicaciones previas
+
+* Para dibujar varias gráficas en una misma figura, se pueden utilizar los siguientes comandos:
+
+```{r, echo=TRUE, eval=FALSE}
+
+# 4 graficas en una unica figura
+op <- par( mfrow=c(4, 1) )
+
+# ...
+# ...
+
+# Volvemos a dibujar una onda en una sola figura
+par( op )
+```
+
+* Podemos utilizar las funciones `plot()` y `lines()` para dibujar dos gráficas en una misma figura.
+
+* También podemos utilizar el paquete `gpplot2` para generar este tipo de figuras.
+
+* Para oir una señal de audio, guardaremos la variable que contiene el audio en formato "Wave" en un fichero de tipo ".wav" en la carpeta temporal denominada "www". Una vez realizado este paso, podemos escuchar este fichero mediante el objeto [**`tags$audio`**](https://shiny.rstudio.com/articles/tag-glossary.html) del paquete `shiny` como se muestra a continuación:
+
+```{r, eval=FALSE}
+# El audio almacenado en la variable (en formato Wave) lo guardamos en la carpeta 
+# temporal llamada "www" en un fichero de tipo ".wav"
+savewav(variable, filename="www/<nombre Audio>.wav")
+
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src = "www/<nombre Audio>.wav", type = "audio/wav", autostart="false", controls = NA)
+
+```
+
+* No obstante, debemos hacer notar que si Rstudio no ejecuta el fichero ".Rmd" en su "Viewer" interno sino en una ventana externa, es posible que no pueda oirse la señal. En ese caso, utilizar el botón "Open in Browser" que podéis encontrar en la cabecera de la página. Una vez que se abra el fichero ".html" correspondiente, podréis oir la señal de audio sin problemas.
+
+* Si se utiliza la función `writeWave()` en vez de la función `savewav()`, es posible que haya que normalizar la señal previamente mediante el comando [**`normalize()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/normalize-methods) del paquete `tuneR`.
+
+-----------------------------------------
+
+# Ejercicio 1
+
+Dibujar cuatro ondas coseno $\cos (2*\pi*A*t)$ en una sola figura donde $A$ es 1, 2, 3, 4 y el intervalo de tiempo ($t$) va de 0s a 2s con un incremento de 0.02s.
+
+```{r,echo=TRUE,eval=TRUE}
+t <- seq(0,2,.02);
+C = c('red','green','black','blue')
+A <- 1:4
+plot(0,0,'n',xlim=c(t[1],t[length(t)]+.5),xlab='t',ylab='cos(2piAt)');
+for (curIter in A){
+  lines(t,cos(2*pi*A[curIter]*t),'l',col=C[curIter]);
+  };
+legend(2,0.5,legend=c('A=1','A=2','A=3','A=4'),text.col=C);
+
+```
+
+-----------------------------------------
+
+# Ejercicio 2
+
+Sumar dos ondas seno de baja y alta frecuencia, $\sin(2*\pi*f_{A}*t)$ y $0.5*\sin(2*\pi*f_{B}*t)$ respectivamente, donde el intervalo de tiempo ($t$) va de 0s a 1s con incremento de 1/8000s y las frecuencias son: $f_{A} = 5Hz$ y $f_{B} = 100Hz$. Finalmente, visualizar las tres ondas: la onda seno de baja frecuencia, la onda seno de alta frecuencia y la suma de ambas ondas.
+
+```{r,echo=TRUE,eval=TRUE}
+par( mfrow=c(2,2) );
+t <- seq(0,1,1/8000);
+sig1 <- sin(2*pi*5*t);
+sig2 <- 0.5*sin(2*pi*1000*t);
+sig3 <- sig1+sig2;
+
+plot(0,0,'n',xlim=c(min(t),0.2),xlab='t',ylab='',main='sig1=sin(2*pi*5*t)');
+lines(t,sig1,col='black',lwd=3);
+
+plot(0,0,'n',xlim=c(min(t),0.01),xlab='t',ylab='',main='sig2=0.5*sin(2*pi*1000*t)');
+lines(t,sig2,col='red',lwd=.5);
+
+plot(0,0,'n',xlim=c(min(t),0.2),ylim=c(min(sig3),max(sig3)),xlab='t',ylab='',main='sig3=sig1+sig2');
+lines(t,sig3,col='blue');
+
+plot(0,0,'n',xlim=c(min(t),0.75),ylim=c(min(sig3),max(sig3)),xlab='t',ylab='');
+lines(t,sig2,col='red');
+lines(t,sig3,col='blue');
+lines(t,sig1,col='black',lwd=3);
+legend(.5,0.5,legend=c('sig1','sig1+sig2','sig2'),text.col=c('red','blue','black'));
+
+```
+
+-----------------------------------------
+
+# Ejercicio 3
+
+1. Generar la nota A4 (440Hz) de un segundo de duración con la frecuencia de muestreo igual a su frecuencia Nyquist y oirla.
+
+```{r,echo=TRUE,eval=TRUE}
+# Frecuencia fundamental de la nota A4
+frecuencia = 440
+# Frecuencia de muestreo
+fs <-frecuencia*2
+# Duracion de la nota
+duracion <- 1
+
+# La nota A4: Salida en formato "Wave"
+A4 <- synth(f=fs, d=duracion, cf=frecuencia, output="Wave")
+
+# formato Wave (informacion)
+print(A4)
+
+# Para acceder a alguna propiedad de la senal de audio, podemos consultar:
+str(A4)
+
+# Por ejemplo, frecuencia de muestreo
+A4@samp.rate
+
+# Oimos la nota
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fn<-paste(p2d,"A4-Nyq.wav",sep = '')
+savewav(A4, filename=fn)
+
+tags$audio(src =fn , type = "audio/wav", autostart="FALSE", controls = TRUE)
+
+```
+
+
+2. Generar las notas A4 (440Hz) y A5 (880Hz) de un segundo de duración con la frecuencia de muestreo de 44100Hz.
+
+```{r,eval=TRUE,echo=TRUE}
+# Frecuencia fundamental de la nota A4
+frecuenciaA4 = 440
+# Frecuencia fundamental de la nota A5
+frecuenciaA5 = 880
+# Frecuencia de muestreo
+fs <-44100
+# Duracion de la nota
+duracion <- 1
+
+
+# La nota A4: Salida en formato "Wave"
+A4 <- synth(f=fs, d=duracion, cf=frecuenciaA4, output="Wave")
+A5 <- synth(f=fs, d=duracion, cf=frecuenciaA5, output="Wave")
+
+# Oimos la nota
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+
+fnA4<-paste(p2d,"A4.wav",sep = '')
+fnA5<-paste(p2d,"A5.wav",sep = '')
+
+savewav(A4, filename=fnA4)
+savewav(A5, filename=fnA5)
+
+tags$audio(src =fnA4 , type = "audio/wav", autostart="FALSE", controls = TRUE)
+tags$audio(src =fnA5 , type = "audio/wav", autostart="FALSE", controls = TRUE)
+```
+
+3. Una vez generadas las notas, sumarlas y guardar el resultado.
+
+```{r,echo=TRUE,eval=TRUE}
+A4A5 <- synth(f=fs, d=duracion, cf=frecuenciaA4,harmonics = c(1,1), output="Wave")
+
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fnA4A5<-paste(p2d,"A4A5.wav",sep = '')
+savewav(A4A5, filename=fnA4A5)
+
+tags$audio(src =fnA4A5 , type = "audio/wav", autostart="FALSE", controls = TRUE)
+```
+
+4. Concatenar las tres ondas: la de 400Hz, la de 880Hz y la suma de ambas con un silencio de 0.30 segundos de duración entre ellas.
+
+```{r,echo=TRUE,eval=TRUE}
+A4sil <- addsilw(A4,fs,at='end',d=0.3)
+A5sil <- addsilw(A5,fs,at='end',d=0.3)
+A4A5sil <- addsilw(A4A5,fs,at='end',d=0.3)
+
+conc <- pastew(A5sil,A4sil,f=fs,at='end',join=TRUE,output = 'Wave')
+conc <- pastew(A4A5sil,conc,f=fs,at='end',join=TRUE,output = 'Wave')
+
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fnConc<-paste(p2d,"conc.wav",sep = '')
+savewav(conc, filename=fnConc,f=fs)
+```
+
+5. Dibujar las tres ondas (unas 200 muestras) y oir la onda resultante. 
+
+```{r,echo=TRUE,eval=TRUE}
+par(mfrow=c(2,2))
+plot(seq(1,length(conc@left),1)/fs,conc@left,type='l',xlab='t',ylab='',main='Concatenated wave')
+plot(seq(1,length(A4@left),1)/fs,A4@left,type='l',xlim=c(0,200/fs),xlab='t',ylab='',main='A4')
+plot(seq(1,length(A4@left),1)/fs,A5@left,type='l',xlim=c(0,200/fs),xlab='t',ylab='',main='A5')
+plot(seq(1,length(A4@left),1)/fs,A4A5@left,type='l',xlim=c(0,200/fs),xlab='t',ylab='',main='A4A5')
+
+
+tags$audio(src =fnConc , type = "audio/wav", autostart="FALSE", controls = TRUE)
+
+```
+
+-----------------------------------------
+
+Puede ser necesario duplicar la amplitud de la onda resultante para que la figura resultante se vea adecuadamente.
+
+Para realizar este ejercicio, podemos utilizar las funciones [**`synth()`**](https://www.rdocumentation.org/packages/seewave/versions/1.4.5/topics/synth), [**`pastew()`**](https://www.rdocumentation.org/packages/seewave/versions/1.4.5/topics/pastew), [**`addsilw()`**](https://www.rdocumentation.org/packages/seewave/versions/1.4.5/topics/addsilw) del paquete `seewave`. 
+
+-----------------------------------------
+
+# Ejercicio 4
+
+Generar un *chirp* de dos segundos y frecuencia de muestreo de 44100Hz.
+
+Para generar un *chirp* podemos utilizar la funcion la función [**`synth()`**](https://www.rdocumentation.org/packages/seewave/versions/1.4.5/topics/synth) del paquete `seewave` adaptando su parámetro `fm`.
+
+Los parámetros de esta función son 5:
+
+    1. Máximo valor que toma la modulación de la frecuencia sinusoidal (en Hz)
+    2. La frecuencia de una modulación de frecuencia sinusoidal
+    3. Máximo valor que toma la modulación de la frecuencia lineal (en Hz)
+    4. La fase de la modulación de la frecuencia (en radianes)
+    5. Máximo valor que toma la modulación de la frecuencia exponencial (en Hz)
+
+
+```{r}
+# Frecuencia de muestreo = 8000 Hz
+fs <- 44100
+# Duracion de la senal = 2 segundos
+duracion <- 2
+# Frecuencia Nyquist
+fn <- fs/2
+# Frecuencia fundamental de la nota middle C
+frecuencia = 262
+# Chirp
+c <- synth(f=fs, cf=frecuencia, d=duracion, fm=c(0,0,0,0,fn), out="Wave")
+
+# Espectro de la senal chirp
+spectro(c, tlab="Tiempo(s)", flab="Frecuencia(kHz)",
+	     alab = "Amplitud", scalelab = "Amplitud\n(dB)")
+```
+
+```{r, echo=FALSE}
+# Oimos el chirp
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fnChirp<-paste(p2d,"chirp.wav",sep = '')
+savewav(c, filename=fnChirp)
+tags$audio(src = fnChirp, type = "audio/wav", autostart="false", controls = TRUE)
+```
+
+-----------------------------------------
+
+# Ejercicio 5
+
+Crear las primeras notas de una canción donde las notas de la melodía son:
+
+    C4, C5, B4, G4, A4, B4, C5
+    C4, A4, G4
+    A3, F4, E4, C4, D4, E4, F4
+    D4, B3, C4, D4, E4, C4
+
+y las longitudes de las notas son: 
+
+    1, 1, 1/2, 1/4, 1/4, 1/2, 1/2
+    1, 1, 2
+    1, 1, 1/2, 1/4, 1/4, 1/2, 1/2
+    1/2, 1/4, 1/4, 1/2, 1/2, 2
+
+Una vez que hayas escuchado la canción, puedes decir ¿ cuál es?
+
+Nota: Para realizar este ejercicio, podemos utilizar las funciones [**`synth()`**](https://www.rdocumentation.org/packages/seewave/versions/1.4.5/topics/synth), [**`pastew()`**](https://www.rdocumentation.org/packages/seewave/versions/1.4.5/topics/pastew), [**`notefreq()`**](https://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/notefreq) del paquete `seewave`. 
+
+```{r, echo= FALSE, message=FALSE, warning=FALSE}
+require(knitr)
+dd <- data.frame (funciones = c("notefreq()", "synth()", "pastew()"),
+                  ejemplos  = c("A3 <- notefreq('A', ref=440, octave=3)", 
+                                "notaC4 <- synth(f=fs, d=1, cf=440, plot=FALSE, output='Wave')", 
+                                "s <- pastew(nota, s, at='end', plot=FALSE, output='Wave')"))
+
+kable(dd, col.names = c("Función", "Ejemplo")) %>%
+  kable_styling(full_width = F) %>%
+  column_spec(1, bold = T, border_right = T) %>%
+  column_spec(2, width = "30em", background = "#D0F5A9")
+```
+
+
+```{r}
+fs = 44100*2
+nf = fs/2
+
+A3<-notefreq('A',ref=440,octave=3)
+A4<-notefreq('A',ref=440,octave=4)
+B3<-notefreq('B',ref=440,octave=3)
+B4<-notefreq('B',ref=440,octave=4)
+C4<-notefreq('C',ref=440,octave=4) 
+C5<-notefreq('C',ref=440,octave=5)
+D4<-notefreq('D',ref=440,octave=4)
+E4<-notefreq('E',ref=440,octave=4)
+F4<-notefreq('F',ref=440,octave=4)
+G4<-notefreq('G',ref=440,octave=4)
+
+noteSeq1 <- c('C4', 'C5', 'B4', 'G4', 'A4', 'B4', 'C5');
+noteSeq2 <- c('C4', 'A4', 'G4')
+noteSeq3 <-c('A3', 'F4', 'E4', 'C4', 'D4', 'E4', 'F4')
+noteSeq4<-c('D4', 'B3', 'C4', 'D4', 'E4', 'C4')
+
+durSeq1<-c(1, 1, 1/2, 1/4, 1/4, 1/2, 1/2)
+durSeq2<-c(1, 1, 2)
+durSeq3<-c(1, 1, 1/2, 1/4, 1/4, 1/2, 1/2)
+durSeq4<-c(1/2, 1/4, 1/4, 1/2, 1/2, 2)
+
+genSon<-function(noteSeq,durSeq,fs){
+  for(iter in 1:length(noteSeq)){
+    tmp<-synth(f=fs,d=durSeq[iter],cf=eval(eval(parse(text=noteSeq[iter]))),plot=FALSE,output='Wave')
+    if (iter == 1){
+      conc<-tmp 
+    }
+    else{
+      conc <- pastew(tmp,conc,f = fs,at='end',plot=FALSE,output='Wave')
+    }
+  }
+  return(conc)
+}
+
+s1<-genSon(noteSeq1,durSeq1,fs)
+s2<-genSon(noteSeq2,durSeq2,fs)
+s3<-genSon(noteSeq3,durSeq3,fs)
+s4<-genSon(noteSeq4,durSeq4,fs)
+
+s1 <- addsilw(s1,fs,at='end',d=0.3)
+s2 <- addsilw(s2,fs,at='end',d=0.3)
+s3 <- addsilw(s3,fs,at='end',d=0.3)
+s4 <- addsilw(s4,fs,at='end',d=0.3)
+
+conc <- pastew(s2,s1,f = fs,at='end',plot=FALSE,output='Wave')
+conc <- pastew(s3,conc,f = fs,at='end',plot=FALSE,output='Wave')
+conc <- pastew(s4,conc,f = fs,at='end',plot=FALSE,output='Wave')
+
+```
+```{r, echo=FALSE}
+# Oimos la cancion " OVER THE RAINBOW de ISRAEL Kamakawiwo'ole"
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fnCancion<-paste(p2d,"cancion.wav",sep = '')
+savewav(conc, filename=fnCancion)
+tags$audio(src = fnCancion, type = "audio/wav", autostart="false", controls = TRUE)
+```

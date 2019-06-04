@@ -1,0 +1,376 @@
+---
+title: "Psicoacústica. Enmascaramiento"
+subtitle: "Procesamiento de imagen y señal"
+author: "Carmen Hernández Gómez"
+date: "Curso 2018-2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', out.width = '100%')
+library("knitr")
+library("shiny")
+library("tuneR")
+library("seewave")
+library("reshape2")
+library("ggplot2")
+library("gridExtra")
+library("monitoR")
+```
+
+---------------------------------------
+
+# Indicaciones previas
+
+* Para oir una señal de audio, guardaremos la variable que contiene el audio en formato "Wave" en un fichero de tipo ".wav" en la carpeta temporal denominada "www". Una vez realizado este paso, podemos escuchar este fichero mediante el objeto [**`tags$audio`**](https://shiny.rstudio.com/articles/tag-glossary.html) del paquete `shiny` como se muestra a continuación:
+
+```{r, eval=FALSE}
+# El audio almacenado en la variable (en formato Wave) lo guardamos en la carpeta 
+# temporal llamada "www" en un fichero de tipo ".wav"
+savewav(variable, filename="www/<nombre Audio>.wav")
+
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src = "www/<nombre Audio>.wav", type = "audio/wav", autostart="false", controls = NA)
+
+```
+
+* Si el fichero de audio se encuentra en un cierto directorio, como por ejemplo el directorio "audio", podemos escuchar este fichero mediante el siguiente comando:
+```{r, eval=FALSE}
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src = "audio/<nombre Audio>.wav", type = "audio/wav", autostart="false", controls = NA)
+
+```
+
+* No obstante, debemos hacer notar que si Rstudio no ejecuta el fichero ".Rmd" en su "Viewer" interno sino en una ventana externa, es posible que no pueda oirse la señal. En ese caso, utilizar el botón "Open in Browser" que podéis encontrar en la cabecera de la página. Una vez que se abra el fichero ".html" correspondiente, podréis oir la señal de audio sin problemas.
+
+* Si se utiliza la función `writeWave()` en vez de la función `savewav()`, es posible que haya que normalizar la señal previamente mediante el comando [**`normalize()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/normalize-methods) del paquete `tuneR`.
+
+* **Muchos de los sonidos generados pueden ser molestos si se oyen a mucho volumen o con auriculares. Por favor, tened cuidado cuando los oigáis.**
+
+
+---------------------------------------
+
+# Escala Bark. Conversiones
+
+La escala Bark ([**Bark scale**](http://en.wikipedia.org/wiki/Bark_scale#Conversions)) es una escala psicoacústica que tiene un rango de [1, 24] y corresponde a las primeras 24 bandas críticas del oído.
+
+  * Escribir una función que convierta una frecuencia en Hz a Bark (toBark) y otra función que convierta una frecuencia en Bark a Hz (toHz).
+
+  * Nota: El paquete `tuneR` ya tiene implementadas estas funciones: `hz2bark(440)` y `bark2hz(4.21)`.
+
+---------------------------------------
+
+  * La función que convierte una frecuencia en Hz a Bark es: 
+```{r}
+toBark <- function(f) {
+	return (13.0 * atan(0.76 * f / 1000.0) + 3.5 * atan((f / 7500.0)^2))
+}
+
+toBark(440)
+```
+
+  * Otra aproximación viene dada por:
+
+```{r}
+toBark <- function(f) {
+ 	return (6 * asinh(f/600))
+}
+
+toBark(440)
+```
+
+---------------------------------------
+
+  * La función que convierte una frecuencia de Bark a Hz es:
+
+```{r}
+toHz <- function(z) {
+	return (1960 / (26.81 / (z + 0.53) - 1))
+}
+
+toHz(4.21)
+```
+
+  * Otra aproximación viene dada por:
+
+```{r}
+toHz <- function(z) {
+  	return (600 * sinh(z/6))
+}
+
+toHz(4.21)
+```
+
+---------------------------------------
+
+# Enmascaramiento
+
+El enmascaramiento se define (segun los estándares de la Agencia Americana) como "el proceso en el cual el umbral de audición para un sonido se eleva en presencia de otro sonido" y "la cantidad por la cual el umbral de audibilidad del sonido se eleva por la presencia de otro sonido".
+
+La selectividad de frecuencia de la membrana basilar puede considerarse similar a la funcionalidad proporcionada por un banco de filtros paso banda con un umbral de audibilidad en cada filtro que depende de la energía de ruido dentro de su filtro paso banda.
+
+Los filtros tienen respuestas similares con anchos de banda desde 100Hz hasta 1kHz aproximadamente. Por encima de esta frecuencia, el ancho de banda aumenta de forma lineal con la frecuencias (desde 3kHz hasta 10kHz). Cada uno de estos filtros auditivos se denomina "filtro de banda crítica" (*critical band filter*) o [**bandas criticas**](https://es.wikipedia.org/wiki/Bandas_cr%C3%ADticas).
+
+El efecto de las bandas críticas es que, para un tono de frecuencia y amplitud fija, la sensibilidad del oído a tonos de frecuencia similar se reduce. Es decir, mientras se escucha un tono, cualquier tono nuevo que llegue dentro del área de enmascaramiento será inaudible.
+
+En general, cuando un tono fuerte "ocupe" los sensores de un filtro de banda crítica, este filtro es menos sensible a otros sonidos similares.
+
+Como ejemplo, crearemos dos tonos puros de forma que el tono de menor frecuencia tenga una amplitud del 20% de la amplitud del otro tono. Se pueden oir ambos tonos cuando se escuchan juntos pero el tono de menor frecuencia se oye menos. Sin embargo, cuando se oyen juntos, el resultado es un tono levemente más alto y muestra un ligero trino.
+
+El tono bajo es inaudible, ya que queda enmascarado por el tono más alto.
+
+---------------------------------------
+
+  * Generar una nota (880Hz) de 2 segundos de duración con una frecuencia de muestreo de 8000Hz y otra nota (800Hz) de 2 segundos de duración con la misma frecuencia de muestreo. Pero en este último caso, disminuimos la amplitud de la señal (* 0.1). A partir de estas dos notas, generamos otro sonido como la suma de ambas.
+
+```{r}
+fs <- 8000
+
+audio_hi <- synth(f=fs, d=2, cf=880, output="Wave")
+audio_lo <- 0.1*synth(f=fs, d=2, cf=800, output="Wave")
+audio    <- audio_hi+audio_lo
+```
+
+  * Nota 880Hz:
+  
+```{r, echo=FALSE}
+savewav(audio_hi/2, file='www/audio_hi2.wav')
+tags$audio(src = "www/audio_hi2.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+  * Nota 800Hz:
+  
+```{r, echo=FALSE}
+savewav(audio_lo/2, file='www/audio_lo2.wav')
+tags$audio(src = "www/audio_lo2.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+  * Suma de las notas anteriores:
+  
+```{r, echo=FALSE}
+savewav(audio/2, file='www/audio2.wav')
+tags$audio(src = "www/audio2.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+  * Obtener el espectro de la suma de ambas notas con un tamaño de ventana de 4096 muestras.
+
+```{r}
+spec(audio, wl = 4096, PSD = T, dB="max0", plot=T, flab="Frecuencia(kHz)", alab="Amplitud")
+```
+
+  Nótese que para sonidos cuyo ancho de banda se encuentra totalmente en una banda crítica, la intensidad del sonido es independiente del ancho de banda. Sin embargo, para sonidos con un ancho de banda mayor que una banda crítica, la intensidad depende de la proporción del ancho de banda del sonido que cae dentro de una banda crítica.
+
+---------------------------------------
+
+# Pitch de tonos complejos (*Missing Fundamental*, f2-f1 *tone induction*)
+
+La capacidad de percibir tonos es un atributo fundamental del cerebro, y de esta manera se sabe que existen estímulos auditivos en los que se ha filtrado artificialmente la frecuencia fundamental (F0) y sólo se dejan los armónicos. Sin embargo, desde el punto de vista perceptual, el estímulo es percibido de igual manera, como si fuera un tono de la frecuencia fundamental.
+
+Este tipo de paradigma psicoacústico se denomina **frecuencia fundamental ausente** (*missing fundamental*) y se sabe que está presente en humanos, primates e incluso en roedores como las chinchillas.
+
+Más aún, se sabe que existen neuronas que responden de manera específica a la frecuencia fundamental (F0) de un estímulo presentado en el paradigma de la frecuencia fundamental ausente.
+
+Las teorías tradicionales de percepción del tono se basan en los trabajos de von Helmoltz y sugieren que la tonalidad de un sonido complejo depende de su frecuencia fundamental. Se suponía que los componentes armónicos no tenían importancia en la altura o tonalidad y sólo influían en el timbre del sonido. Sin embargo, está demostrado que la altura de un sonido complejo persiste aún después de sustraer la frecuencia fundamental.
+
+De tal forma se explica el fenómeno de la **fundamental ausente** (*missing fundamental*). El oído adquiere la capacidad de reconocer la altura de un sonido basado exclusivamente en los componentes armónicos del mismo. Se ha concluido que la altura de periodicidad o virtual de un sonido complejo es un proceso central (neural) no dependiente del órgano periférico (oído).
+
+Este fenómeno es conocido por los fabricantes de equipos de sonido, que a veces consiguen abaratar el coste de producción de un modelo sabiendo que, aunque no sea capaz de reproducir las frecuencias más bajas, "parecerá" que suena bien.
+
+  * Hemos generado una serie de tonos puros, la misma melodía con tonos complejos creada a partir de sinusoidales con la misma frecuencia fundamental y 9 armónicos.
+
+```{r, echo=FALSE}
+### Melodia en tonos puros
+y <- readMP3("audio/pureTones_0.mp3")
+
+# Oimos el audio
+tags$audio(src = "audio/pureTones_0.mp3", type = "audio/mp3", autostart="false", controls = NA)
+```
+
+  * Ahora oiremos la misma melodía con tonos complejos creada a partir de sinusoidales con la misma frecuencia fundamental y 9 armónicos.
+
+```{r, echo=FALSE}
+### Armonicos del 1 al 10
+yh1 <- readMP3("audio/harmonics_1_to_10.mp3")
+
+# Oimos el audio
+tags$audio(src = "audio/harmonics_1_to_10.mp3", type = "audio/mp3", autostart="false", controls = NA)
+```
+
+  * En este caso, solamente oiremos los armónicos de la melodía anterior donde no aparece la frecuencia fundamental.
+
+```{r, echo=FALSE}
+### Armonicos del 4 al 10
+yh2 <- readMP3("audio/harmonics_4_to_10.mp3")
+
+# Oimos el audio
+tags$audio(src = "audio/harmonics_4_to_10.mp3", type = "audio/mp3", autostart="false", controls = NA)
+```
+
+  * Finalmente, veremos el oscilograma de parte de las señales así como el espectrograma de las señales completas:
+
+```{r, echo=FALSE, include=TRUE}
+frame  <- y[3500:4500]
+frame1 <- yh1[3500:4500]
+frame2 <- yh2[3500:4500]
+```
+
+```{r, fig.show='hold', results='asis', fig.height=3}
+op<-par(mfrow=c(1, 3))
+  oscillo(frame, tlab = "Tiempo(s)", alab = "Amplitud")
+  oscillo(frame1, tlab = "Tiempo(s)", alab = "Amplitud")
+  oscillo(frame2, tlab = "Tiempo(s)", alab = "Amplitud")
+par(op)
+```
+
+```{r, fig.show='hold', results='asis', fig.height=3}
+spectro(y, wl=512, wn="hanning", flim=c(0, 3), 
+        tlab="Tiempo(s)", flab="Frecuencia(kHz)",
+	      alab = "Amplitud", scalelab = "Amplitud\n(dB)")
+spectro(yh1, wl=512, wn="hanning", flim=c(0, 3),
+        tlab="Tiempo(s)", flab="Frecuencia(kHz)",
+	      alab = "Amplitud", scalelab = "Amplitud\n(dB)")
+spectro(yh2, wl=512, wn="hanning", flim=c(0, 3),
+        tlab="Tiempo(s)", flab="Frecuencia(kHz)",
+	      alab = "Amplitud", scalelab = "Amplitud\n(dB)")
+```
+
+---------------------------------------
+
+  * Los audios se han obtenido de la [**página del libro**](http://auditoryneuroscience.com/pitch/missing-fundamentals).
+
+  * Demos:
+      + [**Demo1**](http://www.hydrogenaud.io/forums/lofiversion/index.php/t40690.html)
+      + [**Demo2**](http://en.wikipedia.org/wiki/File:Suppress_fundamental.ogg)
+
+  * Referencias:
+      + **Wipe2013** Wipe U, Barbara, Kuroiwa R, Maya, & Dilano R, Paul H. (2013). Trastornos de la percepción musical. Revista de otorrinolaringología y cirugía de cabeza y cuello, 73(2), 189-199. Recuperado en 01 de febrero de 2015, de [**link**](http://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-48162013000200012&lng=es&tlng=es.10.4067/S0718-48162013000200012).
+      + [**Wikipedia**](http://en.wikipedia.org/wiki/Missing_fundamental).
+
+---------------------------------------
+
+# Enmascaramiento temporal (*Cochlea echoes*, 2f1-f2 *tone induction*)
+
+Cuando recibimos la estimulación mediante tonos, el procesamiento activo produce componentes con diferentes frecuencias y amplitudes de los tonos estimulantes.
+
+Por ejemplo, si se presentan dos tonos (f1 y f2 con f2 > f1), se puede percibir un tono de frecuencia 2f1 - f2. Este es un efecto muy conocido en el mundo musical ya que se utiliza para inducir la armonía musical. También se produce este efecto cuando, en una estructura armónica compleja, aunque se elimine la frecuencia principal (*missing fundamental*) se sigue percibiendo dicha frecuencia. A este fenómeno se le denomina [**Enmascaramiento temporal**](https://en.wikipedia.org/wiki/Auditory_masking#Temporal_masking).
+
+  * Generar una nota (1800Hz) de dos segundos de duración y una frecuencia de muestreo de 44100Hz. Añadirle 1 segundo de silencio al final y concatenar de nuevo dicha nota: **[nota, silencio, nota]**
+
+```{r}
+f1 <- synth(f=44100, d=2, cf=1800, output="Wave")
+
+audio_l <- addsilw(f1, at="end", d=1, plot=F, output="Wave")
+audio_l <- pastew(f1, audio_l, at="end", plot=F, output="Wave")
+```
+
+  * Generar un [**chirp**](https://en.wikipedia.org/wiki/Chirp) o una frecuencia modulada pulsada de dos segundos de duración, con la misma frecuencia de muestreo (44100Hz), alrededor del tono de 2000Hz con una desviación de la frecuencia de 200Hz. Añadirle 1 segundo de silencio al final y concaternar de nuevo dicho *chirp*: **[chirp, silencio, chirp]**
+
+```{r}
+f2 <- synth(f=44100, d=2, cf=2000,  fm=c(0,0,200,0,0), output="Wave")
+
+audio_r <- addsilw(f2, at="end", d=1, plot=F, output="Wave")
+audio_r <- pastew(f2, audio_r, at="end", plot=F, output="Wave")
+```
+
+  * Canal izquierdo:
+
+```{r, echo=FALSE}
+savewav(audio_l, file='www/audio_l.wav')
+tags$audio(src = "www/audio_l.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+  * Canal derecho: 
+
+```{r, echo=FALSE}
+savewav(audio_r, file='www/audio_r.wav')
+tags$audio(src = "www/audio_r.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+  * Crear una señal de audio estéreo cuyo canal izquierdo es la nota y el canal derecho contiene el *chirp* ya generado. Oir la señal y obtener su espectrograma.
+
+```{r, echo=FALSE}
+audio <- stereo(left=audio_l, right=audio_r)
+
+savewav(audio, file='www/audio.wav')
+tags$audio(src = "www/audio.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+```{r, fig.show='hold', results='asis', fig.height=3}
+op<-par(mfrow=c(1, 2))
+  spec(audio_l, scale=FALSE, flim=c(0, 5), flab="Frecuencia(kHz)", alab="Amplitud")
+  spec(audio_r, scale=FALSE, flim=c(0, 5), flab="Frecuencia(kHz)", alab="Amplitud")
+par(op)
+```
+
+```{r, fig.show='hold', results='asis', fig.height=3}
+op<-par(mfrow=c(1, 2))
+  spectro(audio_l, scale=FALSE, flim=c(0, 15), 
+          tlab="Tiempo(s)", flab="Frecuencia(kHz)",
+	        alab = "Amplitud", scalelab = "Amplitud\n(dB)")
+  spectro(audio_r, scale=FALSE, flim=c(0, 15), 
+          tlab="Tiempo(s)", flab="Frecuencia(kHz)",
+	        alab = "Amplitud", scalelab = "Amplitud\n(dB)")
+par(op)
+```
+
+---------------------------------------
+
+# Discriminación de la frecuencia
+
+La discriminación de la frecuencia en los humanos depende de la frecuencia absoluta y, hasta cierto punto, también de la amplitud: 2Hz para una señal de SPL de 65dB a 1kHz. 
+
+Por lo tanto, un oyente promedio puede distinguir un tono de 1002Hz de un tono de 1000Hz.
+
+La discriminación de frecuencias está relacionada con la percepción del tono, que disminuye con el aumento de la amplitud de sonido para tonos por debajo de aproximadamente 2kHz, pero crece al aumentar la amplitud para tonos superiores a aproximadamente 4kHz.
+
+A menos que el sujeto sea uno del 1\% de la poblacion capaz de percibir un tono absoluto o un tono perfecto, un tono por encima de 2.5kHz, incluso cuando se presente con una referencia, no se puede discriminar. 
+
+Debemos señalar que, debido a esto, los tonos de frecuencia superiores a 5kHz no pueden evocar una sensacion de melodía.
+
+  * Crear dos tonos sinusoidales puros para ver si se nota alguna diferencia entre ellos: Un tono de 1000Hz y un tono de 1002Hz de dos segundos de duración a 8kHz.
+
+```{r}
+fs <- 8000
+
+f1 <- synth(f=fs, d=2, cf=1000, output="Wave")
+f2 <- synth(f=fs, d=2, cf=1002, output="Wave")
+```
+
+  * Unir ambas secuencias mediante un silencio (0.25s): **[f1, silencio, f2]**
+
+```{r}
+### Audio con silencio
+audio <- addsilw(f1, at="end", d=0.25, plot=F, output="Wave")
+audio <- pastew(f2, audio, at="end", plot=F, join=T, output="Wave")
+```
+
+  * Oir dicho audio y obtener su espectro.
+
+```{r, echo=FALSE}
+savewav(audio, file='www/audio_c.wav')
+tags$audio(src = "www/audio_c.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+```{r, fig.show='hold', results='asis', fig.height=3}
+spec(audio, wl = 4096, PSD = T, dB="max0", plot=T, flab="Frecuencia(kHz)", alab="Amplitud")
+```
+
+  * Unir ambas secuencias sin silencio: **[f1, f2]**
+
+```{r}
+### Audio sin silencio
+audio <- pastew(f1, f2, at="end", plot=F, join=T, output="Wave")
+```
+
+  * Oir dicho audio y obtener su espectro.
+
+```{r, echo=FALSE}
+savewav(audio, file='www/audio_s.wav')
+tags$audio(src = "www/audio_s.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+```{r, fig.show='hold', results='asis', fig.height=3}
+spec(audio, wl = 4096, PSD = T, dB="max0", plot=T, flab="Frecuencia(kHz)", alab="Amplitud")
+```

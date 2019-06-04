@@ -1,0 +1,323 @@
+---
+title: "Tareas a realizar. Parte II"
+subtitle: "Procesamiento de imagen y señal"
+author: "FREDERIC ROUX"
+date: "Curso 2018-2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("shiny")
+library("tuneR")
+library("seewave")
+library("reshape2")
+library("ggplot2")
+library("dplyr")
+library("knitr")
+```
+
+---------------------------------------
+
+# Indicaciones previas
+
+* Para dibujar varias gráficas en una misma figura, se pueden utilizar los siguientes comandos:
+
+```{r, echo=TRUE, eval=FALSE}
+
+# 4 graficas en una unica figura
+op <- par( mfrow=c(4, 1) )
+
+# ...
+# ...
+
+# Volvemos a dibujar una onda en una sola figura
+par( op )
+```
+
+* Podemos utilizar las funciones `plot()` y `lines()` para dibujar dos gráficas en una misma figura.
+
+* También podemos utilizar el paquete `gpplot2` para generar este tipo de figuras.
+
+* Para oir una señal de audio, guardaremos la variable que contiene el audio en formato "Wave" en un fichero de tipo ".wav" en la carpeta temporal denominada "www". Una vez realizado este paso, podemos escuchar este fichero mediante el objeto [**`tags$audio`**](https://shiny.rstudio.com/articles/tag-glossary.html) del paquete `shiny` como se muestra a continuación:
+
+```{r, eval=FALSE}
+# El audio almacenado en la variable (en formato Wave) lo guardamos en la carpeta 
+# temporal llamada "www" en un fichero de tipo ".wav"
+savewav(variable, filename="www/<nombre Audio>.wav")
+
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src = "www/<nombre Audio>.wav", type = "audio/wav", autostart="false", controls = NA)
+
+```
+
+* No obstante, debemos hacer notar que si Rstudio no ejecuta el fichero ".Rmd" en su "Viewer" interno sino en una ventana externa, es posible que no pueda oirse la señal. En ese caso, utilizar el botón "Open in Browser" que podéis encontrar en la cabecera de la página. Una vez que se abra el fichero ".html" correspondiente, podréis oir la señal de audio sin problemas.
+
+* Si se utiliza la función `writeWave()` en vez de la función `savewav()`, es posible que haya que normalizar la señal previamente mediante el comando [**`normalize()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/normalize-methods) del paquete `tuneR`.
+
+-----------------------------------------
+
+# Ejercicio 1
+
+1. Filtrar el audio "bass_oboe_raphael.wav" de forma que el filtro "deje pasar" solo las frecuencias entre 1000Hz y 3000Hz y oir el resultado de la operación de filtrado.
+
+```{r, eval=TRUE,echo=TRUE}
+
+# Audio (se puede elegir otro audio)
+y <- readWave("audio/bass_oboe_raphael.wav")
+
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fnSAV<-paste(p2d,"bass_oboe_raphael.wav",sep = '')
+
+# Oimos el audio mediante el objeto del paquete "shiny"
+savewav(y, f=y@samp.rate,filename=fnSAV)
+tags$audio(src =fnSAV, type = "audio/wav", autostart="false", controls = NA)
+
+# Filtrar las frecuencias entre 1000Hz y 3000Hz
+y_filtrada <- bwfilter(y,f=y@samp.rate,n=4,from=1000,to = 3000, bandpass=TRUE,listen=FALSE,output='Wave')
+
+# El audio almacenado en la variable y (en formato Wave) lo guardamos en la carpeta temporal llamada "www" en un fichero de tipo ".wav"
+fnSAV<-paste(p2d,"bass_oboe_raphaelBP.wav",sep = '')
+savewav(y_filtrada, f=y_filtrada@samp.rate,filename=fnSAV)
+
+# Oimos el audio mediante el objeto del paquete "shiny"
+tags$audio(src =fnSAV, type = "audio/wav", autostart="false", controls = TRUE)
+
+```
+
+-----------------------------------------
+
+2. Visualiza las dos señales (no-filtrada y filtrada) en una única figura.
+
+```{r,eval=TRUE,echo=TRUE}
+par(mfrow=c(1,2))
+t = seq(0,(length(y)-1)/y@samp.rate,1/y@samp.rate)
+plot(t,y@left,type='l',col='gray',xlab='t',ylab='Amplitude',main='Raw signal')
+plot(t,y_filtrada@left,type='l',col='blue',xlab='t',ylab='Amplitude',main='Band-pass fitlered signal')
+```
+
+-----------------------------------------
+
+3. Visualiza el espectro de ambos audios (el original y el filtrado) en una única figura.
+
+```{r,eval=TRUE,echo=TRUE}
+par(mfrow=c(1,2))
+meanspec(y,f=y@samp.rate,wl=1024,flim=c(0,4),PSD=TRUE,main='bass_oboe_raphael',alab="PSD")
+meanspec(y_filtrada,f=y_filtrada@samp.rate,wl=1024,flim=c(0,4),PSD=TRUE,main='bass_oboe_raphael_bpfiltered',alab="PSD")
+```
+
+-----------------------------------------
+
+4. La frecuencia 1000Hz, ¿ a qué "bin"" de la FFT corresponde ? ¿ Y la de 3000Hz ?
+
+Nota: El "bin" ($n$) al que pertenece una frecuencia ($f$) dada una frecuencia de muestreo ($fs$) y el tamaño de la ventana del análisis de Fourier ($N$) viene dado por la siguiente ecuación:
+		
+$$n = \frac{f * N}{fs}$$
+
+* Respuesta: **La frecuencia 1000Hz corresponde al bin n = (1000x1024)/$y@samp.rate = 128 de la FFT.La frecuencia 3000Hz corresponde al bin n = (3000x1024)/$y@samp.rate = 384 de la FFT.**
+
+-----------------------------------------
+
+# Ejercicio 2
+
+1. Para la señal utilizada en el ejercicio anterior ("bass_oboe_raphael.wav"), calcular el espectro de la señal utilizando la ventana de *Hanning* de longitud 512 muestras.
+
+```{r,eval=TRUE,echo=TRUE}
+hspec<-meanspec(y,f=y@samp.rate,wl=512,wn='hanning',plot=0)
+```
+
+-----------------------------------------
+
+2. Visualizar algunas partes del espectro (por ejemplo, de 0s a 10s) e identificar visualmente algunas de las primeras 5 notas (por ejemplo, *middle C*).
+
+```{r,eval=TRUE,echo=TRUE}
+spectro(y,f=y@samp.rate,wl=512,wn='hanning')
+
+middleC <- floor(notefreq('C',ref=440,octave=3))
+middleC2 <- floor(notefreq('C',ref=440,octave=2))
+```
+```{r,eval=TRUE,echo=TRUE}
+ix <- seq(0,10*y@samp.rate,1)
+hspec1<-meanspec(y@left[ix],f=y@samp.rate,wn='hanning',wl=512,plot=0)
+#plot(hspec1,type='l')
+bin = round((middleC*512)/y@samp.rate)
+plot(0,0,type='n',xlim=c(0,4),xlab='Frequency [kHz]',ylab='Amplitude')
+lines(hspec1,type='l')
+points(middleC2/1e3,hspec1[bin],type='o',col='green')
+points(middleC/1e3,hspec1[bin],type='o',col='red')
+legend(3,0.5,legend=c('f=130','f=261'),text.col=c('green','red'))
+```
+
+-----------------------------------------
+
+3. Obtener un segundo de la señal a partir de la muestra 64000, y el espectro de esa nueva señal.
+
+```{r}
+ix <- seq(64000,length(y),1)
+hspec1<-meanspec(y@left[ix],f=y@samp.rate,wn='hanning',wl=512,plot=0)
+#plot(hspec1,type='l')
+bin = round((middleC*512)/y@samp.rate)
+plot(hspec1,type='l',xlim=c(0,4),xlab='Frequency [kHz]',ylab='Amplitude')
+lines(middleC2/1e3,hspec1[bin],type='o',col='green')
+lines(middleC/1e3,hspec1[bin],type='o',col='red')
+legend(3,0.5,legend=c('f=130','f=261'),text.col=c('green','red'))
+```
+
+-----------------------------------------
+
+4. (Opcional) Reconstruir el sonido como la suma de ondas seno utilizando todas las $N/2$ ondas seno.
+
+```{r,echo=TRUE,eval=TRUE}
+wl<-512
+s <- spectro(y@left,f=y@samp.rate,wl=wl,wn='hanning',plot=FALSE, complex=TRUE)
+print(dim(s$amp))
+x_amp <- s$amp[seq(1,(wl/2)/2,1),]
+print(dim(x_amp))
+y_reconstruida <- istft(x_amp, f=y@samp.rate,wl=wl, output ="Wave")
+
+par(mfrow=c(2,2))
+plot(y@left,type='l',col='gray',xlab='t',ylab='Amplitude',main='Original signal')
+plot(y_reconstruida@left,type='l',xlab='t',ylab='Amplitude',main='Reconstructed signal')
+```
+
+-----------------------------------------
+
+# Ejercicio 3 
+
+1. A partir de la señal musical obtenida en el ejercicio 5 del fichero de tareas **"tareas_parte1.html"** (esto es, la canción generada a partir de las notas), calcular el espectro de la señal para varias longitudes de la ventana. Ver qué efectos se producen.
+
+```{r,eval=TRUE,echo=TRUE}
+p2d<-'/Users/froux/Downloads/CódigoDelCursoDeProcesamientoDelAudioDigital-20190317/ficherosHTML/www/'
+fnCancion<-paste(p2d,"cancion.wav",sep = '')
+y <- readWave(fnCancion)
+fs = y@samp.rate
+
+par(mfrow=c(3,2))
+plot(y@left[seq(0,length(y@left),4)],type='l',col='gray')
+hspec1<-meanspec(y@left-mean(y@left),f=fs,wn='hanning',wl=512,plot=0)
+hspec2<-meanspec(y@left-mean(y@left),f=fs,wn='hanning',wl=1024,plot=0)
+hspec3<-meanspec(y@left-mean(y@left),f=fs,wn='hanning',wl=2048,plot=0)
+hspec4<-meanspec(y@left-mean(y@left),f=fs,wn='hanning',wl=4096,plot=0)
+hspec5<-meanspec(y@left-mean(y@left),f=fs,wn='hanning',wl=8192,plot=0)
+plot(hspec1,xlim=c(0,3),type='l',xlab='Frequency [Hz]',ylab='Amplitude',main='nfft:512')
+plot(hspec2,xlim=c(0,3),type='l',xlab='Frequency [Hz]',ylab='Amplitude',main='nfft:1024')
+plot(hspec3,xlim=c(0,3),type='l',xlab='Frequency [Hz]',ylab='Amplitude',main='nfft:2048')
+plot(hspec4,xlim=c(0,3),type='l',xlab='Frequency [Hz]',ylab='Amplitude',main='nfft:4096')
+plot(hspec5,xlim=c(0,3),type='l',xlab='Frequency [Hz]',ylab='Amplitude',main='nfft:5192')
+print('Se puede ver que mas largo esta la ventana de tiempo, mas alta esta la resolucion frecuencial!')
+```
+
+-----------------------------------------
+
+2. Seleccionar un valor de la longitud de la ventana y calcular el tamaño de la ventana en ms.
+
+```{r,eval=TRUE,echo=TRUE}
+nfft = 2048
+print(paste('El valor en ms de la ventana de tiempo es:',1/(y@samp.rate/(nfft))*1e3,sep=''))
+```
+
+-----------------------------------------
+
+3. Para el valor de la longitud de ventana elegido, calcular el espectro utilizando un tipo de ventana distinto al utilizado en el apartado 1 de este ejercicio. Ver qué efectos se producen.
+
+```{r,eval=TRUE,echo=TRUE}
+hspec1<-meanspec(y@left-mean(y@left),f=fs,wn='hanning',wl=2048,plot=0)
+hspec2<-meanspec(y@left-mean(y@left),f=fs,wn='rectangle',wl=2048,plot=0)
+
+plot(0,0,type='n',xlim=c(0,4),xlab='Frequency [Hz]',ylab='Amplitude',main='nfft:1024')
+lines(hspec1,type='l',col='blue')
+lines(hspec2,type='l',col='red')
+legend(2,0.25,legend=c('hanning','rectangle'),text.col=c('blue','red'))
+```
+
+
+-----------------------------------------
+Se puede ver que se produce mas spectral leakage para la ventana de tipo rectangle.
+Es decir hay menos atenuacion de la energia para frecuencias cercas pero fueras de la banda en cual esta
+localizada la señal.
+
+-----------------------------------------
+
+4. Mediante el seguimiento del *pitch*, visualizaremos algunas partes del espectro (por ejemplo, de 0s a 10s) e identificaremos visualmente y numéricamente algunas de las primeras notas.
+Para realizar el seguimiento del *pitch* podemos optar por alguna de estas técnicas:
+    + autocorrelación
+    + espectro medio y la funcion [**`fpeaks()`**](https://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/fpeaks)
+    + funciones del paquete `tuneR` tales como [**`periodogram()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/periodogram-methods), [**`FF()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/FF), [**`noteFromFF()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/noteFromFF) y [**`melodyplot()`**](https://www.rdocumentation.org/packages/tuneR/versions/1.3.3/topics/melodyplot)
+    
+```{r,echo=TRUE,eval=TRUE}
+par(mfrow=c(3,2))
+### Pitch tracking a partir de la autocorrelacion
+res <- autoc(y, f=fs, wl=2048, plot=F)
+
+# Tracking del pitch (grafica)
+plot(res[,1], res[,2], type="l", main = "Pitch Tracking", xlab="Tiempo(s)", ylab="Frequencia")
+
+# Obtenemos las notas que forman esta cancion
+notas  <- unique(res[,2])
+notas
+
+### Pitch tracking a partir de la funcion fpeaks()
+s     <- meanspec(y@left, fs, wl=2048, wn="hanning", plot=F)
+picos <- fpeaks(s, plot=F)
+# Tracking del pitch (frecuencias encontradas) en una tabla
+knitr::kable(picos, col.names=c("Frecuencia", "Amplitud"), row.names=FALSE) #%>%
+#kable_styling(full_width = F)
+
+# Tracking del pitch (grafica)
+fpeaks(s, plot=T, xlim=c(0,1.2), xlab = "Frecuencia(kHz)", ylab = "Amplitud")
+
+### Pitch tracking a pariir del periodograma
+perioWav <- periodogram(y, width = 2048)
+freqWav <- FF(perioWav)
+noteWav <- noteFromFF(freqWav)
+
+### Sin suavizado
+melodyplot(perioWav, observed = noteWav, plotenergy = F, xlab = "Tiempo", ylab="Nota")
+# Nombre de las notas
+noteWavNames <- noteWav[!is.na(noteWav)]
+notenames(noteWavNames)
+
+### Con suavizado
+noteWav_s <- smoother(noteWav)
+melodyplot(perioWav, observed = noteWav_s, plotenergy = F, xlab = "Tiempo", ylab="Nota")
+# Nombre de las notas
+noteWavNames_s <- noteWav_s[!is.na(noteWav_s)]
+notenames(noteWavNames_s)
+```
+
+-----------------------------------------
+
+5. Calcular la frecuencia dominante de la melodía mediante las funciones: [**`dfreq()`**](https://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/dfreq) y la frecuencia promedio mediante la función [**`specprop()`**](http://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/specprop) del espectro medio obtenido a partir de la función [**`meanspec()`**](http://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/meanspec).
+
+```{r,echo=TRUE,eval=TRUE}
+par(mfrow=c(2,2))
+# Frecuencia dominante (dfreq)
+df <- dfreq(y, wn="hanning", wl=1024, ylim=c(0,3), 
+            xlab = "Tiempo(s)", ylab="Frecuencia(kHz)")
+
+# Tabla de las frecuencias dominantes (sin repeticion)
+info <- rle(df[,2]) %>%
+         unclass() %>%
+         as.data.frame() %>%
+         mutate(end = cumsum(lengths),
+                start = c(1, lag(end)[-1] + 1))
+ddf <- data.frame(start=df[info$start,1], end=df[info$end,1], frequency=info$values)
+# Propiedades en una tabla
+knitr::kable(ddf, col.names=c("Time.Start", "Time.End", "Frequency")) #%>%
+#kable_styling(full_width = F)
+
+s<-meanspec(y,f=fs,wl=2048,wn='hanning',plot=F)#espectro medio 
+sp<- specprop(s,f=fs,str=F,flim=c(0,3),plot=1)#frecuencia promedio
+```
+
+-----------------------------------------
+
+6. Calcular el número de cruces por el cero de la señal y dibujarlos. Podemos utilizar la función [**`zcr()`**](http://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/zcr).
+
+```{r,echo=TRUE,eval=TRUE}
+# Numero de cruces por el cero de la senal
+nc0 <- zcr(y, wl=1024, plot=TRUE, xlab="Tiempo(s)")
+```
+

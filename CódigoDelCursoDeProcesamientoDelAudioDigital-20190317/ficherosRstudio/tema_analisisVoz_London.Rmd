@@ -1,0 +1,114 @@
+---
+title: "Análisis de una señal de voz: White Fang de Jack London"
+subtitle: "Procesamiento de imagen y señal"
+author: "Carmen Hernández Gómez"
+date: "Curso 2018-2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', out.width = '60%')
+library("knitr")
+library("shiny")
+library("tuneR")
+library("seewave")
+library("reshape2")
+library("ggplot2")
+library("gridExtra")
+library("phonTools")
+library("soundgen")
+```
+
+----
+
+Vamos a realizar un análisis de los 6 primeros segundos de la señal de voz *White Fang* de Jack London `audio/23976-01_short.wav`.
+
+```{r, echo=TRUE, fig.show='hold', results='asis', fig.height=6}
+# White Fang (Jack London)
+
+## Leemos el audio
+x <- readWave("audio/23976-01_short.wav")
+## Tomamos 6s
+x6s <- cutw(x, from = 0, to = 6, plot = F, marks = TRUE, output="Wave")
+
+## Oscilograma
+oscillo(x6s, title="White Fang", tlab = "Tiempo(s)", alab = "Amplitud")
+```
+
+```{r, echo=FALSE}
+# Oimos el audio
+savewav(x6s, filename="www/23976-6s.wav")
+tags$audio(src = "www/23976-6s.wav", type = "audio/wav", autostart="false", controls = NA)
+```
+
+----
+
+Visualizamos el espectro medio de la señal con un tamaño de ventana de 64 muestras y otro de 1024 muestras.
+
+```{r, echo=TRUE, fig.show='hold', results='asis', fig.height=6}
+## Espectro medio
+op<-par(mfrow=c(2,1))
+  meanspec(x6s, wl=64, flim=c(0,5), 
+           main="White Fang wl=64", flab="Frecuencia(kHz)", alab="Amplitud")
+  meanspec(x6s, wl=1024, flim=c(0,5), 
+           main="White Fang wl=1024", flab="Frecuencia(kHz)", alab="Amplitud")
+par(op)
+```
+
+---
+
+Calculamos el espectrograma *narrowband* y *wideband* con ventanas de tamaño de 35ms y de 5ms de la señal.
+
+```{r, echo=TRUE}
+## 35ms -> wl2 = (35/1000)*x@samp.rate = 840 muestras
+wl_35 <- round((35/1000)*x6s@samp.rate)
+wl_35
+
+## 5ms -> wl2 = (5/1000)*x@samp.rate = 120 muestras
+wl_5 <- round((5/1000)*x6s@samp.rate)
+wl_5
+```
+
+```{r, echo=FALSE, fig.show='hold', results='asis', fig.height=6}
+## Espectrogramas
+op<-par(mfrow=c(2,1))
+  spectro(x6s, wl=wl_35, flim=c(0,4), scale=F, main="White Fang 35ms, wl=840", 
+          tlab= "Tiempo(s)", flab= "Frecuencia(kHz)", alab = "Amplitud", 
+          scalelab = "Amplitud\n(dB)")
+  spectro(x6s, wl=wl_5, flim=c(0,4), scale=F, main="White Fang 5ms, wl=120", 
+          tlab= "Tiempo(s)", flab= "Frecuencia(kHz)", alab = "Amplitud", 
+          scalelab = "Amplitud\n(dB)")
+par(op)
+```
+
+---
+
+Calculamos y visualizamos los formantes de la señal con las funciones [**`findformants()`**](https://www.rdocumentation.org/packages/phonTools/versions/0.2-2.1/topics/findformants) y [**`formanttrack()`**](https://www.rdocumentation.org/packages/phonTools/versions/0.2-2.1/topics/formanttrack) del paquete `phonTools`.
+
+```{r, fig.show='hold', results='asis'}
+## Formantes
+findformants(x6s@left, fs=x6s@samp.rate)
+```
+
+```{r, fig.show='hold', results='asis'}
+## Tracking
+formanttrack(x6s@left, fs = x6s@samp.rate)
+```
+
+---
+
+Finalmente, segmentamos la señal con la función [**`timer()`**](https://www.rdocumentation.org/packages/seewave/versions/2.1.0/topics/timer) del paquete `seewave` y con la función [**`segment()`**](https://www.rdocumentation.org/packages/soundgen/versions/1.3.2/topics/segment) del paquete [**`soundgen`**](https://cran.rstudio.com/web/packages/soundgen/vignettes/acoustic_analysis.html#acoustic-analysis-with-analyze).
+
+```{r, warning=FALSE, message=FALSE, fig.show='hold', results='asis', fig.height=6}
+## Segmentacion con el paquete seewave
+timer(x6s, threshold=5, msmooth=c(80,0), 
+      main='White Fang', xlab = "Tiempo(s)", ylab = "Amplitud")
+```
+
+```{r, warning=FALSE, message=FALSE, fig.show='hold', results='asis', fig.height=6}
+## Segmentacion con el paquete soundgen
+s <- segment("www/23976-6s.wav", plot = TRUE, 
+             main='White Fang', xlab = "Tiempo(ms)", ylab = "Amplitud")
+```
