@@ -130,9 +130,9 @@ W2L.set(
 
 var L2W = new THREE.Matrix4(); // de la camera al mundo
 L2W.set(
-	R.x, 	U.x, 	D.x, 	0, 
-	R.y, 	U.y, 	D.y, 	0,
-	R.z, 	U.z, 	D.z, 	0,
+	R.x, 	U.x, 	D.x, 	E.x, 
+	R.y, 	U.y, 	D.y, 	E.y,
+	R.z, 	U.z, 	D.z, 	E.z,
 	0,	0,	0,	1	
 	);
 
@@ -342,7 +342,7 @@ function init() {
 	mostrar_consola();
 	camera_v = camera;
 	// TODO 3: descomentar esta sentencia
-	//camNew.matrixAutoUpdate=false;  // calcularemos las matrices nosotros
+	camNew.matrixAutoUpdate=false;  // calcularemos las matrices nosotros
 
 }
 

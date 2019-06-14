@@ -25,7 +25,7 @@ var rangulo=0.1;
 
 
 
-function pitch()
+function pitch() // rotación es respecto a R 
 {
 // TODO
 var auxmat = new THREE.Matrix4();
@@ -44,7 +44,7 @@ if (modo_vuelo === 0)
 	}
 }
 
-function yaw()
+function yaw() // rotación es respecto a U
 {
 // TODO
 var auxmat = new THREE.Matrix4();
@@ -66,7 +66,7 @@ if (modo_vuelo === 0)
 renovar_camara();
 }
 
-function roll()
+function roll() //  rotación es respecto a D
 {
 // TODO
 
