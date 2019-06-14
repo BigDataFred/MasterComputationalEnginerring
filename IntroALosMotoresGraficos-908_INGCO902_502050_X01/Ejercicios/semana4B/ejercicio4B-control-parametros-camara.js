@@ -23,8 +23,6 @@ var speed = 1;
 var mimatriz = new THREE.Matrix4();
 var rangulo=0.1;
 
-
-
 function pitch() // rotación es respecto a R 
 {
 // TODO
@@ -32,15 +30,61 @@ var auxmat = new THREE.Matrix4();
 var angulo;
 if (controlValores.Pitch > 0) angulo = rangulo;
 	else angulo = -rangulo;
+
 if (modo_vuelo === 0)
 	{
 	// modificar parametros de forma que el punto de atención no se mueva
 	// la rotación es respecto a R 
+		
+		//Pasar Sistema referencia local a Sistema referencia mundo		
+		var x = at.x;
+		var y = at.y;
+		var z = at.z;
+		var T1 = new THREE.Matrix4( );
+		T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
+	
+		var T2 = new THREE.Matrix4( );
+		T2.makeTranslation(x,y,z);// translate (0,0,0) back to (px,py,pz)
+	
+		var xyz = new THREE.Vector3( R.x, R.y, R.z );
+		xyz.divideScalar( xyz.length() );
+
+		var M = new THREE.Matrix4( );
+		M.makeRotationAxis( xyz, angulo );
+	
+		auxmat.multiplyMatrices(T2,M);//postmultiply
+		auxmat.multiply(T1);//postmultiply
+
+		E.applyMatrix4( auxmat );
+		U.applyMatrix4( auxmat );
+		D.applyMatrix4( auxmat );
 	}
     else
 	{
 	// modificar parametros de forma que la posición de la cámara no se mueva
 	// la rotación es respecto a R
+		var x = E.x;
+		var y = E.y;
+		var z = E.z;
+		
+		var T1 = new THREE.Matrix4( );
+		T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
+	
+		var T2 = new THREE.Matrix4( );
+		T2.makeTranslation(x,y,z);// translate (0,0,0) back to (px,py,pz)
+	
+		var xyz = new THREE.Vector3( R.x, R.y, R.z );
+		xyz.divideScalar( xyz.length() );
+
+		var M = new THREE.Matrix4( );
+		M.makeRotationAxis( xyz, angulo );
+	
+		auxmat.multiplyMatrices(T2,M);//postmultiply
+		auxmat.multiply(T1);//postmultiply
+
+		at.applyMatrix4( auxmat );
+		U.applyMatrix4( auxmat );
+		D.applyMatrix4( auxmat );
 	}
 }
 
@@ -52,16 +96,61 @@ var angulo;
 if (controlValores.Yaw > 0) angulo = rangulo;
 	else angulo = -rangulo;
 
-if (modo_vuelo === 0)
-	{
-	// modificar parametros de forma que el punto de atención no se mueva
-	// la rotación es respecto a U
-	}
-    else
-	{
-	// modificar parametros de forma que la posición de la cámara no se mueva
-	// la rotación es respecto a U
-	} 
+	if (modo_vuelo === 0)
+		{
+		// modificar parametros de forma que el punto de atención no se mueva
+		// la rotación es respecto a R 
+		
+			//Pasar Sistema referencia local a Sistema referencia mundo		
+			var x = at.x;
+			var y = at.y;
+			var z = at.z;
+			var T1 = new THREE.Matrix4( );
+			T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
+	
+			var T2 = new THREE.Matrix4( );
+			T2.makeTranslation(x,y,z);// translate (0,0,0) back to (px,py,pz)
+	
+			var xyz = new THREE.Vector3( U.x, U.y, U.z );
+			xyz.divideScalar( xyz.length() );
+
+			var M = new THREE.Matrix4( );
+			M.makeRotationAxis( xyz, angulo );
+	
+			auxmat.multiplyMatrices(T2,M);//postmultiply
+			auxmat.multiply(T1);//postmultiply
+
+			E.applyMatrix4( auxmat );
+			R.applyMatrix4( auxmat );
+			D.applyMatrix4( auxmat );
+		}
+	    else
+		{
+		// modificar parametros de forma que la posición de la cámara no se mueva
+		// la rotación es respecto a R
+			var x = E.x;
+			var y = E.y;
+			var z = E.z;
+		
+			var T1 = new THREE.Matrix4( );
+			T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
+	
+			var T2 = new THREE.Matrix4( );
+			T2.makeTranslation(x,y,z);// translate (0,0,0) back to (px,py,pz)
+	
+			var xyz = new THREE.Vector3( U.x, U.y, U.z );
+			xyz.divideScalar( xyz.length() );
+
+			var M = new THREE.Matrix4( );
+			M.makeRotationAxis( xyz, angulo );
+	
+			auxmat.multiplyMatrices(T2,M);//postmultiply
+			auxmat.multiply(T1);//postmultiply
+
+			at.applyMatrix4( auxmat );
+			R.applyMatrix4( auxmat );
+			D.applyMatrix4( auxmat );
+		}
 
 renovar_camara();
 }
@@ -74,16 +163,62 @@ var auxmat = new THREE.Matrix4();
 var angulo;
 if (controlValores.Roll > 0) angulo = rangulo;
 	else angulo = -rangulo;
-if (modo_vuelo === 0)
-	{
-	// modificar parametros de forma que el punto de atención no se mueva
-	// la rotación es respecto a D
-	}
-    else
-	{
-	// modificar parametros de forma que la posición de la cámara no se mueva
-	// la rotación es respecto a D
-	} 
+	if (modo_vuelo === 0)
+		{
+		// modificar parametros de forma que el punto de atención no se mueva
+		// la rotación es respecto a R 
+		
+			//Pasar Sistema referencia local a Sistema referencia mundo		
+			var x = at.x;
+			var y = at.y;
+			var z = at.z;
+			var T1 = new THREE.Matrix4( );
+			T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
+	
+			var T2 = new THREE.Matrix4( );
+			T2.makeTranslation(x,y,z);// translate (0,0,0) back to (px,py,pz)
+	
+			var xyz = new THREE.Vector3( D.x, D.y, D.z );
+			xyz.divideScalar( xyz.length() );
+
+			var M = new THREE.Matrix4( );
+			M.makeRotationAxis( xyz, angulo );
+	
+			auxmat.multiplyMatrices(T2,M);//postmultiply
+			auxmat.multiply(T1);//postmultiply
+
+			E.applyMatrix4( auxmat );
+			U.applyMatrix4( auxmat );
+			R.applyMatrix4( auxmat );
+		}
+	    else
+		{
+		// modificar parametros de forma que la posición de la cámara no se mueva
+		// la rotación es respecto a R
+			var x = E.x;
+			var y = E.y;
+			var z = E.z;
+		
+			var T1 = new THREE.Matrix4( );
+			T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
+	
+			var T2 = new THREE.Matrix4( );
+			T2.makeTranslation(x,y,z);// translate (0,0,0) back to (px,py,pz)
+	
+			var xyz = new THREE.Vector3( D.x, D.y, D.z );
+			xyz.divideScalar( xyz.length() );
+
+			var M = new THREE.Matrix4( );
+			M.makeRotationAxis( xyz, angulo );
+	
+			auxmat.multiplyMatrices(T2,M);//postmultiply
+			auxmat.multiply(T1);//postmultiply
+
+			at.applyMatrix4( auxmat );
+			U.applyMatrix4( auxmat );
+			R.applyMatrix4( auxmat );
+		}
+	
 renovar_camara();
 }
 
@@ -123,7 +258,7 @@ function modo(val)
 {
 if (val===1)
 	{
-	 modo_vuelo = 0;  // analisis
+	 modo_vuelo = 0;  // analisis		 
 	alert(modo_vuelo);
 	}
     else 
