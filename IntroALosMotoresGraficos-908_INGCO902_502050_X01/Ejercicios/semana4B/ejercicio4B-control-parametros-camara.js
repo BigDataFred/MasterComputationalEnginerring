@@ -172,6 +172,7 @@ if (controlValores.Roll > 0) angulo = rangulo;
 			var x = at.x;
 			var y = at.y;
 			var z = at.z;
+			
 			var T1 = new THREE.Matrix4( );
 			T1.makeTranslation(-x,-y,-z);// translate (px,py,pz) to (0,0,0)
 	
@@ -188,8 +189,8 @@ if (controlValores.Roll > 0) angulo = rangulo;
 			auxmat.multiply(T1);//postmultiply
 
 			E.applyMatrix4( auxmat );
-			U.applyMatrix4( auxmat );
-			R.applyMatrix4( auxmat );
+			U.applyMatrix4( M );
+			R.applyMatrix4( M );
 		}
 	    else
 		{
@@ -215,8 +216,8 @@ if (controlValores.Roll > 0) angulo = rangulo;
 			auxmat.multiply(T1);//postmultiply
 
 			at.applyMatrix4( auxmat );
-			U.applyMatrix4( auxmat );
-			R.applyMatrix4( auxmat );
+			U.applyMatrix4( M );
+			R.applyMatrix4( M );
 		}
 	
 renovar_camara();

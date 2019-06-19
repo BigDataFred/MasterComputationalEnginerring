@@ -94,22 +94,26 @@ function render() {
     var l1z = Math.cos( time * 0.3 ) * 2;
 
     // TODO set sphere1 and light1 in position (l1x, l1y, l1z)
-
-
+	sphere1.position.set(l1x, l1y, l1z);
+	light1.position.set(l1x, l1y, l1z);
+	
     var l2x = Math.cos( time * 0.3 ) * 2;
     var l2y = Math.sin( time * 0.5 ) * 3;
     var l2z = Math.sin( time * 0.7 ) * 2;
 
     // TODO set sphere2 and light2 in position (l2x, l2y, l2z)
-
+	sphere2.position.set(l2x, l2y, l2z);
+	light2.position.set(l2x, l2y, l2z);
 
     var l3x = Math.sin( time * 0.7 ) * 2;
     var l3y = Math.cos( time * 0.3 ) * 3;
     var l3z = Math.sin( time * 0.5 ) * 2;
 
     // TODO set sphere3 and light3 in position (l3x, l3y, l3z)
-
-    renderer.render( scene, camera );
+	sphere3.position.set(l3x, l3y, l3z);
+	light3.position.set(l3x, l3y, l3z);
+    
+	renderer.render( scene, camera );
 }
 
 try {

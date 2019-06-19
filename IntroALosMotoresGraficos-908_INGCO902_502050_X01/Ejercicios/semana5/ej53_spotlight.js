@@ -42,10 +42,19 @@ function init() {
     //
     // Also, add spotlight to the scene
 
-    var spotlight = {};
+    var spotlight = new THREE.SpotLight( 0xffffff );
+	spotlight.position.set( -7, 7, 0.5 );
+	spotlight.intensity = 1.5;
+	spotlight.distance = 20;
+	spotlight.angle = 10*Math.PI/180;
+	spotlight.penumbra = 1;
+	spotlight.decay = 1;
+	
+	scene.add( spotlight );
+	
 
     // Uncomment follow line to have the spotlight cast shadows
-    // spotlight.castShadow = true;
+    spotlight.castShadow = true;
 
     spotlight.shadowCameraNear = 1;
     spotlight.shadowCameraFar = 2500;

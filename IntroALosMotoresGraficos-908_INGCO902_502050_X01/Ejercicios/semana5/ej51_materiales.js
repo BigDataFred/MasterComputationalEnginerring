@@ -99,7 +99,7 @@ function setMaterialParameters() {
     // Change material color with matColor
     // 
     // use
-    //   material.color = ...
+    material.color = matColor;
 
 
 
@@ -110,7 +110,12 @@ function setMaterialParameters() {
     // possible values of effectController.Shading are: 'Flat','Smooth'
     //
     // use
-    //   material.shading = ...
+	if ( effectController.Shading == 'Flat' ){
+		material.shading = THREE.FlatShading;
+	}
+	else {
+		material.shading = THREE.SmoothShading;
+	}
     //
     // possible values are THREE.FlatShading and THREE.SmoothShading
 
@@ -124,7 +129,12 @@ function setMaterialParameters() {
     //   material.wireframe = ...
     //
     // possible values are true/false
-
+	if ( effectController.Wireframe == true){
+		material.wireframe = true;
+	}
+	else {
+		material.wireframe = false;
+	}
 
     // TODO
     //
@@ -132,7 +142,11 @@ function setMaterialParameters() {
     //
     // use
     //   material.shininess = ...
-
+	console.log(material.type);
+	if (material.type == 'MeshPhongMaterial' ){
+		material.shininess = effectController.Shininess;
+		console.log(material.shininess);
+	}
 
     obj.geometry.normalsNeedUpdate = true;
     material.needsUpdate = true;
@@ -152,7 +166,18 @@ function setMaterial() {
     // Example:
     //   newMaterial = new THREE.MeshBasicMaterial( );
     //   ...
-
+	if ( effectController.Model == 'Basic' )
+	{
+		newMaterial = new THREE.MeshBasicMaterial( );
+	}
+	else if ( effectController.Model == 'Lambert' )
+	{
+		newMaterial = new THREE.MeshLambertMaterial( );
+	}
+	else 
+	{
+		newMaterial = new THREE.MeshPhongMaterial( );		
+	}
 
     if (newMaterial) obj.material = newMaterial; // set new material to object
     setMaterialParameters();    // put proper values
