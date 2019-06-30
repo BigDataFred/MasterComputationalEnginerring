@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<div id="container">
+</div>
+<body>
+  <script src="../lib/jquery-1.11.3.min.js"></script>
+  <script src="../lib/dat.gui.min.js"></script>
+  <script src="../lib/three.min.js"></script>
+  <script src="../lib/OrbitControls.js"></script>
+
+  <script type="text/x-glsl" id="vertexShader">
+
+    uniform float uFactor;
+	
+    void main() {
+      // TODO
+      // set newPos to be the position of the vertex times uFactor
+      vec3 newPos = vec3(position)*uFactor;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( newPos, 1.0 );
+    }
+
+  </script>
+  
+  <script type="text/x-glsl" id="fragmentShader">
+
+    uniform vec3 uColor;
+
+    void main() {
+      // TODO
+      // set color with the uniform
+      vec3 color = vec3(1.0)*uColor;
+      gl_FragColor = vec4(color, 1.0);
+    }
+
+  </script>
+  <script src="ej62_uniforms.js"></script>
+
+</body>
+<br>
+</html>

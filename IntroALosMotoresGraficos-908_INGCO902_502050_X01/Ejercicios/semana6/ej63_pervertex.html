@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<div id="container">
+</div>
+<body>
+  <script src="../lib/jquery-1.11.3.min.js"></script>
+  <script src="../lib/dat.gui.min.js"></script>
+  <script src="../lib/three.min.js"></script>
+  <script src="../lib/OrbitControls.js"></script>
+
+  <script type="text/x-glsl" id="vertexShader">
+
+    // ambient light
+    uniform vec3 uLightAmbientColor; // the color of ambient light
+
+    // directional light
+    uniform vec3 uLightDirection; // the direction of the light (camera space)
+    uniform vec3 uLightColor;     // the color of the light
+
+    // material
+    uniform vec3 uMaterialColor;  // the color of material
+    uniform float uKd;            // the diffuse component of material 
+    uniform float uKs;            // the specular component of material
+    uniform float uShininess;     // the material shininess
+
+    // output varying
+    varying vec3 vColor;          // the color of the vertex
+    
+    void main() {
+
+      // TODO
+      // mvPosition: vertex position in camera space
+      //
+      // useful GLSL functions:
+      //
+      //    normalize(v) : returns a vector with same direction of v but whose magnitude is 1
+      vec4 tmpPos = vec4(position,1.0)*modelViewMatrix; 
+	
+      vec3 mvPosition = normalize( vec3( tmpPos.x, tmpPos.y, tmpPos.z ) );//gl_Position.x, gl_Position.y, gl_Position.z
+
+      // TODO
+      // mvNormal: normalized normal in camera space
+      //
+      // useful GLSL functions:
+      //
+      //    normalize(v) : returns a vector with same direction of v but whose magnitude is 1
+      vec4 tmpNorm = vec4(normal,1.0)*modelViewMatrix;
+      vec3 mvNormal = normalize( vec3(tmpNorm.x, tmpNorm.y, tmpNorm.z) );
+
+      // TODO
+      // lightDirection: normalized vector from vertex to light (camera space)
+      //
+      // useful GLSL functions:
+      //
+      //    normalize(v) : returns a vector with same direction of v but whose magnitude is 1
+
+      vec3 lightDirection = normalize( vec3(-1.0*uLightDirection) );
+
+      // TODO
+      // viewDirection: normalized vector from vertex to camera (camera space)
+      //
+      // useful GLSL functions:
+      //
+      //    normalize(v) : returns a vector with same direction of v but whose magnitude is 1
+
+      vec3 viewDirection = normalize( vec3(0.0, 0.0, 0.0)-vec3(position)  );//vec3(0.0, 0.0, 5.0)-vec3(position)
+
+      // TODO
+      // calculate diffuseFactor = (see exercise documentation and slides)
+      //
+      // it needs:
+      //    - normalized normal in camera space
+      //    - normalized vector from vertex to light (camera space)
+      //
+      //    useful GLSL functions:
+      //
+      //    max(a,b)   : returns the maximum of a and b.
+      //    dot(v1,v2) : dot product of vectors v1 and v2 (v1 and v2 must have same dimensions)
+      float tmp = dot( mvNormal, lightDirection);
+      float mx = max(tmp,0.0);
+      float diffuseFactor = mx;
+
+      // TODO
+      // diffuse: the diffuseFactor times the diffuse component of material (uses diffuseFactor)
+
+      float diffuse = diffuseFactor*uKd;
+      
+      // TODO
+      // calculate r, the normalized reflection vector (see exercise documentation and slides)
+      //
+      // it needs:
+      //    - normalized normal in camera space
+      //    - normalized vector from vertex to light (camera space)
+      //
+      //    useful GLSL functions:
+      //
+      //    dot(v1,v2) : dot product of vectors v1 and v2 (v1 and v2 must have same dimensions)
+
+      vec3 r = 2.0*tmp*mvNormal-lightDirection;
+
+      // TODO
+      // calculate specularFactor (see exercise documentation and slides)
+      //
+      // it needs
+      //    - normalized normal in camera space
+      //    - normalized vector from vertex to light (camera space)
+      //    - normalized vector from vertex to camera (camera space)
+      //    - material shininess
+      //    - normalized reflection vector (r, calculated above)
+      //
+      //    useful GLSL functions:
+      //
+      //    max(a,b)   : returns the maximum of a and b
+      //    dot(v1,v2) : dot product of vectors v1 and v2 (v1 and v2 must have same dimensions)
+      //    pow(x,y)   : return x value raised to the y power
+	  
+	  float tmp2 =  dot(r,mvNormal);
+	  float mx2 = max( tmp2, 0.0);
+	  float p = pow( mx2, uShininess );
+      float specularFactor = p;
+
+      // TODO
+      // specular: the specularFactor times the specular component of material (uses specularFactor)
+
+      float specular = specularFactor*uKs;
+
+      // TODO
+      // vColor the vertex color, as a sum of three channels: ambient, diffuse and specular
+      //
+      // given:
+      //  ambient: the color of ambient light
+      //  mcol: color of material
+      //  scol: color of light
+      //  diffuse: diffuse factor
+      //  specular: specular factor
+      // 
+      // 
+      // vColor = ambient + mcol * scol * (diffuse + specular)
+
+      vColor = uLightAmbientColor + uMaterialColor * uLightColor * (diffuse + specular);
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0);
+    }
+
+  </script>
+
+  <script type="text/x-glsl" id="fragmentShader">
+
+    varying vec3 vColor;
+    void main() {
+      gl_FragColor = vec4(vColor, 1.0);
+    }
+
+	</script>
+
+  <script src="ej63_pervertex.js"></script>
+
+</body>
+<br>
+</html>

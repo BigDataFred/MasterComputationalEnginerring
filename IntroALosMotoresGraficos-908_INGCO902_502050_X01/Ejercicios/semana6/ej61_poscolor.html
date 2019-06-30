@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<div id="container">
+</div>
+<body>
+  <script src="../lib/jquery-1.11.3.min.js"></script>
+  <script src="../lib/dat.gui.min.js"></script>
+  <script src="../lib/three.min.js"></script>
+  <script src="../lib/OrbitControls.js"></script>
+  
+  <script type="text/x-glsl" id="vertexShader">
+
+  varying vec3 vColor;
+
+  void main() {
+    // TODO:
+    // 
+    // assign to vColor the color of the vertex, that is, is the position of
+    // the vertex in local coordinates.
+
+    vColor = vec3(position);
+	
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+  }
+
+  </script>
+
+  <script type="text/x-glsl" id="fragmentShader">
+
+  varying vec3 vColor;
+
+  void main() {
+  	gl_FragColor = vec4(vColor, 1.0);
+  }
+
+  </script>
+
+  <script src="ej61_poscolor.js"></script>
+
+</body>
+<br>
+</html>
