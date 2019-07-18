@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<div id="container">
+</div>
+<body>
+  <script src="../lib/jquery-1.11.3.min.js"></script>
+  <script src="../lib/dat.gui.min.js"></script>
+  <script src="../lib/three.min.js"></script>
+  <script src="../lib/OrbitControls.js"></script>
+
+  <script type="text/x-glsl" id="vertexShader">
+
+	varying vec2 vTexUV;
+	varying vec2 vCloudUV;
+	
+	uniform float uCloudOffset;
+
+	void main() {
+	  // TODO
+	  //
+	  // vTexUV is the basic texture coordinate 
+	  vTexUV = uv;
+	  
+	  // TODO
+	  //
+	  // vCloudUV is the texture coordinate of the cloud texture
+	  // calculate it as the usual 'uv' coordinate plus an offset in the u (s)
+	  // direction
+	  vCloudUV = uv+vec2(uCloudOffset,0.0);
+
+	  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+	}
+
+	</script>
+
+  <script type="text/x-glsl" id="fragmentShader">
+
+	varying vec2 vTexUV;
+	varying vec2 vCloudUV;
+
+	uniform sampler2D uBaseTexture;      // the base texture
+	uniform sampler2D uCloudTexture;     // the cloud texture
+
+	void main() {
+
+	  // TODO
+	  //
+	  // texColor is the color of base texture
+	  // sample base texture to obtain color
+	  vec4 texColor =  texture2D( uBaseTexture, vTexUV);
+
+	  // TODO
+	  //
+	  // cloudColor is the color of cloud texture
+	  // sample cloud texture to obtain color
+	  vec4 cloudColor =  texture2D( uCloudTexture, vCloudUV);
+
+	  // TODO
+	  //
+	  // gl_FragColor is a mix of both texture colors (use a factor of 0.3)
+	  
+	  gl_FragColor = texColor + 0.3*cloudColor;
+	}
+	
+	</script>
+
+  <script src="ej72_multitex.js"></script>
+
+</body>
+<br>
+</html>

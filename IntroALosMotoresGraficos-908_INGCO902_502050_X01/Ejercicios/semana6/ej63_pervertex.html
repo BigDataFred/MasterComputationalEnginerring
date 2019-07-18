@@ -38,9 +38,8 @@
       // useful GLSL functions:
       //
       //    normalize(v) : returns a vector with same direction of v but whose magnitude is 1
-      vec4 tmpPos = vec4(position,1.0)*modelViewMatrix; 
-	
-      vec3 mvPosition = normalize( vec3( tmpPos.x, tmpPos.y, tmpPos.z ) );//gl_Position.x, gl_Position.y, gl_Position.z
+      //vec4 tmpPos = vec4(position,1.0)*modelViewMatrix; 
+      vec3 mvPosition =  vec3(modelViewMatrix*vec4(position, 1.0));//normalize( vec3( tmpPos.x, tmpPos.y, tmpPos.z ) );//gl_Position.x, gl_Position.y, gl_Position.z
 
       // TODO
       // mvNormal: normalized normal in camera space
@@ -48,8 +47,8 @@
       // useful GLSL functions:
       //
       //    normalize(v) : returns a vector with same direction of v but whose magnitude is 1
-      vec4 tmpNorm = vec4(normal,1.0)*modelViewMatrix;
-      vec3 mvNormal = normalize( vec3(tmpNorm.x, tmpNorm.y, tmpNorm.z) );
+
+      vec3 mvNormal = normalize( vec3(modelViewMatrix*vec4(normal, 0.0)) );
 
       // TODO
       // lightDirection: normalized vector from vertex to light (camera space)
