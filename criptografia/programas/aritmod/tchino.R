@@ -21,7 +21,14 @@ tchino <- function(a,p)
       }
     
     #Código
-    
+    x<-0
+    for (ix in 1:l){
+      
+      y<-invmod(n/p[ix],p[ix]) # calculamos a^{-1} (mod n) 
+      x <- ( x + (n/p[ix]) * y*a[ix] )%%n # sumando x
+    }
+    out<-c(x,n)
+    return(out)
   }
 
   

@@ -10,5 +10,7 @@ invmod <- function(a,n)
     if(x[1]!=1){stop("los números no son primos relativos")}
 
     #Código
-   
+    inv <- x[2] # u
+    inv <- inv%%n # mod(n)
+   return(inv)
   }

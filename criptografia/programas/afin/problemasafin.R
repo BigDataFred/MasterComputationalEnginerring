@@ -29,14 +29,19 @@ mensaje <- decafin(LETTERS, "CJKDHJYBDZXVSJ", 1, 11, 11)
 print(mensaje)
 #"LOHECONSEGUIDO"
 
+
 print("Problema 2")
 #Interceptamos el mensaje ``ELIX'', que sabemos que ha sido cifrado con
 #una transformación translación (transformación afín con clave a=1, b)
 #usando el alfabeto de 26 letras y partiendo el mensaje en bloques de una letra.
 #Obtener la clave y descifrar el mensaje probando todas las claves posibles.
 #Solución: 
-
-
+#for (ix in 1:100){
+#  mensaje <- decafin(LETTERS, "ELIX", 1, 1, ix)
+#  print(paste(ix,mensaje))
+#}
+mensaje <- decafin(LETTERS, "ELIX", 1, 1, 49)
+print( mensaje )
 
 print("Problema 3")
 # Estamos intentando criptoanalizar una transformación afín sobre un 
@@ -48,7 +53,24 @@ print("Problema 3")
 # Interceptamos el mensaje ``D0PV4DS1DP22CPIVP DOVJVADMW 5P22Q'' y sabemos
 # que termina con la firma ``007''. Descifrar el mensaje.
 #Solución:
-
+alfa <- c(seq(0,9,1),LETTERS," ")
+men2num(alfa, "00722Q", 1)
+# 0  0  7  2  2 26
+#Planteamos un sistema
+#0.a+b=2 mod 37
+#0.a+b=2 mod 37
+#7.a+b=26 mod 37
+#Resolvemos
+b<-2
+#b=2 
+#7.a=-24=61 mod 37
+#7.a=61 mod 37 => mcd(7,37) =1, entonces no dividimos entre 2
+#7.a=61 mod 37, por tanto a=7^{-1}*61 mod 13.
+a <- (invmod(7, 37)*61)%%37
+a
+# 23
+mensaje <- decafin(alfa, "D0PV4DS1DP22CPIVP DOVJVADMW 5P22Q", 1, a, b)
+print(mensaje)
 
 
 print("Problema 4")
@@ -60,4 +82,32 @@ print("Problema 4")
 #a) obtener las claves de cifrado y descifrado,
 #b) descifrar: ``ALIWVZHYTWRPKQWDAZHN'',
 #c) cifrar: ``BUENTRABAJO''.
+alfa<-LETTERS
+k<-2
 
+#a) obtener las claves de cifrado y descifrado
+men2num(alfa, "ENDEALBQ", k)
+# 117  82 11  42
+#Planteamos un sistema
+#117.a+b=11 mod 26
+#82.a+b=42 mod 26
+
+#Resolvemos
+# http://practicalcryptography.com/ciphers/affine-cipher/
+# D = (r-s) mod N
+D <-(117-82)%%26^{k}
+D
+Dp<- invmod(D,26^{k})
+Dp
+# a= Dp*(r-s) mod 26^{k}
+# b= Dp*(ps-qr) mod 26^{k}
+# a = 5*(11-42) mod 26^{k} 
+# b = 5*(117*42-82*11) mod 26^{k} 
+a<-(Dp*(11-42))%%26^{k}
+b<-(Dp*(117*42-82*11))%% 26^{k}
+#b) descifrar: ``ALIWVZHYTWRPKQWDAZHN'',
+mensaje <- decafin(alfa, "ALIWVZHYTWRPKQWDAZHN", k, a, b)
+print(mensaje)
+
+#c) cifrar: ``BUENTRABAJO''.
+print( cifafin(alfa, "BUENTRABAJO", k,  a, b) )

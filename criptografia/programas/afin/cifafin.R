@@ -15,5 +15,8 @@ cifafin <- function(alfabeto, mensaje, k,  a, b)
     if(euclides(a, N)!=1){stop("(a, N) deben ser  primos relativos")}
 
     #Código
-  
+    M <- men2num( alfabeto, mensaje, k )# C = f(M) = aM + b mod N^{k}
+    v <- (a*M+b) %% N^{k}
+    C <-num2men( alfabeto, v, k) 
+    return(C)
   }

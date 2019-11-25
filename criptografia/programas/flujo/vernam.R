@@ -14,5 +14,11 @@ vernam <- function(menbits, clave)
       }
 
     #Codigo
-  
+    L <- length(menbits)
+    out <- NULL
+    for (ix in 1:L){
+      if ( xor(menbits[ix],clave[ix]) ){ out[ix] <- 1}
+      else{out[ix] <- 0}
+    }
+    return(out)
   }

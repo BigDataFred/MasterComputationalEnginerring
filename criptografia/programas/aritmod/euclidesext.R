@@ -9,5 +9,24 @@ euclidesext <- function(a,b)
     if(b<0){stop("b  debe ser no negativo")}
 
     #Código
-
+    t <- 1
+    s <- 0 
+    g <- 0
+    h <- 1
+    
+    while(b>0){
+      q <-a%/%b
+      r<- a-q*b
+      u<-t-q*s
+      v<-g-q*h
+      
+      a<-b
+      b<-r
+      t<-s
+      s<-u
+      g<-h
+      h<-v
+    }
+  atg<-c(a,t,g)  
+  return(atg)
   }

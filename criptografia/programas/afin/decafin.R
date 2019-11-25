@@ -8,6 +8,10 @@ decafin <- function(alfabeto, criptograma, k,  a, b)
 #          k, a, b (enteros, k>0, a primo relativo con N=length(alfabeto))
 # Salida:  mensaje en claro
   {
-  
-   
+    N <- length(alfabeto)
+    ap <- invmod(a,N^{k})
+    bp <- -b*ap
+
+    M <- cifafin(alfabeto, criptograma, k,  ap, bp)
+    return(M)
   }
