@@ -16,6 +16,15 @@ LFSR<- function(c, s0, n)
       }
 
     # Código
-
+    s <- s0
+    cIx <- which(c==1)
+    j<-length(s)+1
+    while (TRUE){
+      s <- c(s,sum(s[j-cIx])%%2)
+      if (length(s) ==n){ # all(out[k,] ==s0)
+        return(s[1:n])
+      }
+      j<-j+1
+    }
   }
 

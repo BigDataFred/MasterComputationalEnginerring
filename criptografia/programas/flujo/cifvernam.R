@@ -11,5 +11,9 @@ cifvernam <- function(alfabeto, mensaje, k, c, s0)
   # Salida: vector de bits que representa el mensaje cifrado
 
   {
-
+  b <- men2bit(alfabeto,mensaje,k)
+  nb <- length(b)
+  clave<-LFSR(c,s0,nb)
+  C <- vernam(b, clave)
+  return(C)
   }

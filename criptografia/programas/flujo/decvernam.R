@@ -11,5 +11,9 @@ decvernam <- function(alfabeto, cifbits, k, c, s0)
   # Salida: mensaje en claro
 
   {
-
+  nb <- length(cifbits)
+  clave<-LFSR(c,s0,nb)
+  mdec <- vernam( cifbits, clave)
+  M <- bit2men(alfabeto, mdec,k)
+  return(M)
   }
