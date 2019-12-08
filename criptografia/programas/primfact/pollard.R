@@ -14,5 +14,38 @@ pollard  <- function(n, p, x0, N)
   if ((n%%2==0)|(n<3)){stop("n debe ser un entero impar mayor que 2")}
   
   # Código
-
+  factores <- "No se ha encontrado factorizacion"
+  b<-x0
+  contador<-0
+  factoresencontrados<-FALSE
+  
+  while ( (contador < N) && (factoresencontrados==FALSE) ){
+    
+    a<-1
+    v<-evalpol(p,x0)
+    chck<-vector(length=2)
+    while (TRUE){
+      chck[1]<-((a-v)%%n)==0
+      chck[2]<- (a%%n == v%%n)
+      if (all(chck==TRUE)){
+        break
+      }
+      a<-a+1
+    }
+    b<-c(b,a)
+    j<-1
+    while ((j<length(b)) && (factoresencontrados==FALSE)){
+      d<- euclides(abs(a-b[j]),n)
+      if ((d>1) && (d<n)){
+        factores<-c(d,n/d)
+        factoresencontrados<-TRUE
+      }
+      j<-j+1
+    }
+    if (factoresencontrados==FALSE){
+      x0<-a
+      contador<-contador+1
+    }
+  }
+  return(factores)
 }

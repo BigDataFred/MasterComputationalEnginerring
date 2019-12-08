@@ -7,9 +7,15 @@ xorbit <- function(a,b)
   #a, b deben tener la misma longitud.
   {
      #Chequeos
-    if((any(a < 0))|(any(a > 255))){stop("a debe ser un vector de bytes expresado en decimal")}
-    if((any(b < 0))|(any(b > 255))){stop("b debe ser un vector de bytes expresados en decimal")}
-    if(length(a)!=length(b)){stop("a y b tienen que tener la misma longitud")}
+    if( (any(a < 0))|(any(a > 255)) ){
+      stop("a debe ser un vector de bytes expresado en decimal")
+      }
+    if( (any(b < 0)) | (any(b > 255)) ){
+      stop("b debe ser un vector de bytes expresados en decimal")
+      }
+    if(length(a)!=length(b)){
+      stop("a y b tienen que tener la misma longitud")
+      }
 
     #Codigo
     sumaxor <- c()

@@ -10,8 +10,21 @@ fermat <- function(n, N)
     if ((n%%2==0)|(n<=0)){stop("n debe ser un entero positivo impar")}
 
     # Código
-    
-     }
+    t<-ceiling( sqrt(n) )
+    s <- sqrt(t^{2}-n)
+    contador<-0
+    while ( (contador < N) && (s != as.integer(s)) ){
+      t<-t+1
+      s<-sqrt(t^{2}-n)
+      contador<-contador+1
+    }
+    if ( (contador<N) && ((t-s)!=1)){
+      factores<-c(t+s,t-s)      
+    } else {
+      factores<-"No se ha encontrado la factorizacion"
+    }
+    return(factores)
+  }
 
   
   
