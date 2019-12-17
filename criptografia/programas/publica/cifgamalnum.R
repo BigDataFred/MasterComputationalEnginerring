@@ -7,5 +7,8 @@ cifgamalnum <- function(p, g, y, M)
   #          M (equivalente numérico del mensaje en claro)
   # Salida: C=(r, s) (mensaje numérico cifrado)         
   {
- 
+    b <- sample(2:(p-2), 1)
+    r <- potmod(g,b,p)
+    s <- M*potmod(y,b,p)
+    return(c(r,s))
   }

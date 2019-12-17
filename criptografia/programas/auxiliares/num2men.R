@@ -9,7 +9,7 @@ num2men <- function(alfabeto, v, k)
   {  
     #Chequeo
      N <- length(alfabeto)
-    if(any(v>=N^k)){stop("alguna componente de v es demasiado grande")}  
+    if(any(v>=N^{k})){stop("alguna componente de v es demasiado grande")}  
 
     #Código
     N <- length(alfabeto)
