@@ -17,9 +17,10 @@ decRSAnumch <- function(p, q, d, C)
     
     Cp <- C%%p
     Cq <- C%%q
-    M1 <- potmod(Cp,d*p,p)
-    M2 <- potmod(Cq,d*q,q)
-    M<-(c1*M1+c2*M2)%%(p*q)
+    M1 <- potmod(Cp,dp,p)
+    M2 <- potmod(Cq,dq,q)
+    n<-p*q
+    M<-(c1*M1+c2*M2)%%(n)
     return(M)
   }
 

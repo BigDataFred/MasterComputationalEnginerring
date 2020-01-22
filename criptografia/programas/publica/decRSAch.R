@@ -8,15 +8,14 @@ decRSAch <- function(p, q, d, alfabeto, cifrado, k, l)
   #          l: número de letras de los bloques de mensaje cifrado
   # Salida:  mensaje en claro
   {
-  N <- length( alfabeto)
-  if (N^{k}>n){stop("n debe ser >=N^{k}")}
-  if (N^{l}<n){stop("n debe ser <=N^{l}")}
+  #N <- length( alfabeto)
+  #if (N^{k}>p){stop("p debe ser >=N^{k}")}
+  #if (N^{l}<p){stop("p debe ser <=N^{l}")}
   D <- {}
   for (ix in 1:length(cifrado)){
-    l <- nchar(cifrado[ix])
     c<- men2num( alfabeto, cifrado[ix],l )
-    tmp <- decRSAnumch(p, q, d, c)
-    m<-num2men(alfabeto, tmp, k)
+    v <- decRSAnumch(p, q, d, c)
+    m<-num2men(alfabeto, v, k)
     D <- c(D,m)
   }
   return(D)

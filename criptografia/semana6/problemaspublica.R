@@ -127,37 +127,128 @@ mensaje <- c("MAWANAWNOWHAYWCLASES")
 C <- cifRSA(46927, 39423, LETTERS, mensaje , 3, 4)
 print(C)
 D <- decRSA(281, 167, 26767, LETTERS, C, 3, 4)
-D <- paste(D,sep="",collapse="")
-print(D)
+D1 <- paste(D,sep="",collapse="")
+print(D1)
 
 C <- cifRSA(46927, 39423, LETTERS, mensaje , 3, 4)
 print(C)
 D <- decRSAch(281, 167, 26767, LETTERS, C, 3, 4)
-D <- paste(D,sep="",collapse="")
-print(D)
+D2 <- paste(D,sep="",collapse="")
+print(D2)
 
 #5. Problemas
 ############################################
+source("publica/cifRSA.R")
+source("publica/decRSA.R")
+source("publica/decRSAch.R")
+source("publica/decRSAnum.R")
+source("publica/decRSAnumch.R")
+source("aritmod/invmod.R")
 
 #1
-n<-48959
-e<-6529
-C<-"CHUBBBVDCEMOBUFMBKYB"
-ix <- 3
-while(TRUE){
-  p=n/ix
-  if (p == as.integer(p)){
-    q=n/p  
-    eul<-n + 1 - (p + q)
-    d<-invmod(e,eul)
-    D=NULL
-    try(D <- decRSAch(p, q, d, LETTERS, C, 3, 4))
-    if (length(D)>0){
+n<-48959 # clave publica (n)
+e<-6529# clave publica (e)
+C<-"CHUBBBVDCEMOBUFMBKYB" # mensaje cifrado
+f<-vector(length=2)
+f[1]<-3
+while (TRUE){
+   if (n%%f[1]==0){
+      f[1] = n/(n/f[1])
+      f[2] = n/f[1]
       break
-    }
-  }
-  ix<-ix+2
+   } 
+   f[1]<-f[1]+2
+} # factorizacion por fuerza
+p<-f[1]# clave privada(p)
+q<-f[2]#clave privada(q)
+eul<-n + 1 - (p + q) # funcion de euler
+d<-invmod(e,eul)#calve privada(d)
+D <- decRSAch(p, q, d, LETTERS, C, 3, 4) # mensaje decifrado
+D <- paste(D,sep="",collapse="")
+print(D)
+
+#2
+source("primfact/milrab.R")
+print("Problema 2")
+n<-536813567
+e<-3602561
+#factorizacion por fuerza
+f<-vector(length=2)
+f[1]<-3
+while (TRUE){
+ if (n%%f[1]==0){
+   f[2] = n/f[1]
+   break
+ } 
+ f[1]<-f[1]+2
 }
+p<-f[1]# clave privada(p)
+q<-f[2]#clave privada(q)
+eul <- n-1
+d<-invmod(e,eul)#calve privada(d)
+print(p*q==n)
+print((d*e)%%eul ==1)
+
+C<-"axyfiudbkwngupbfpnazyahrchcf"
+# decifrando sin el teorema chino
+D1<-NULL
+
+D1 <- try(decRSA(p, q, d, letters, C, 6, 7)) # mensaje decifrado
+D1 <- paste(D1,sep="",collapse="")
+cat("mensaje:",D1)
+
+# decifrando con el teorema chino
+D2<-NULL
+D2 <- decRSAch(p, q, d, letters, C, 6, 7) # mensaje decifrado
+D2 <- paste(D2,sep="",collapse="")
+cat("mensaje:",D2)
+
+
+#3
+print("Problema 3")
+n<-817
+eA<-19
+eB<-29
+Ca<-191
+Cb<-362
+source("aritmod/euclidesext.R")
+out<-euclidesext(eA,eB)
+u<-abs(out[2])
+v<-abs(out[3])
+M<-potmod(Ca,u,n)*potmod(Cb,v,n)
+cat("mensaje decifrado:",M)
+
+#4
+print("Problema 4")
+n<-46927
+e<-39423
+C<-vector()
+C[1]<-20736
+i<-2
+while (TRUE){
+   C[i] <- potmod(C[i-1],e,n)
+   if (C[i]!=C[1]){
+      M <- C[i-1]%%n
+      break
+   }
+   i<-i+1
+}
+cat("mensaje decifrado:",M)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
